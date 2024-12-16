@@ -34,17 +34,16 @@ namespace Chobitech.Realm
             {
                 var sBuilder = new RealmSchema.Builder();
                 var roType = typeof(RealmObject);
-                var sTypes = new List<Type>();
 
                 foreach (var t in SchemeTypes)
                 {
                     if (t.IsSubclassOf(roType))
                     {
-                        sTypes.Add(t);
+                        sBuilder.Add(t);
                     }
                 }
 
-                if (sTypes.Count > 0)
+                if (sBuilder.Count > 0)
                 {
                     config.Schema = sBuilder.Build();
                 }
