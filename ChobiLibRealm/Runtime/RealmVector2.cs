@@ -1,5 +1,3 @@
-
-
 namespace Chobitech.Realm
 {
     using System.Numerics;

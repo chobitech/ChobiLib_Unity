@@ -1,4 +1,3 @@
-
 namespace Chobitech.Realm
 {
     using MongoDB.Bson;

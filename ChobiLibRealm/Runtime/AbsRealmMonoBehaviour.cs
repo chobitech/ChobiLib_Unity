@@ -75,6 +75,9 @@ namespace Chobitech.Realm
             }
         }
 
+        public T With<T>(Func<Realm, T> func) => func(Realm);
+        public void With(UnityAction<Realm> action) => action(Realm);
+
         public T WithTransaction<T>(Func<Realm, T> func) => Realm.WithTransaction(func);
         public void WithTransaction(UnityAction<Realm> action) => Realm.WithTransaction(action);
 
