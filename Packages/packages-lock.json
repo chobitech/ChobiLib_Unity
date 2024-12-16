@@ -6,6 +6,15 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.chobitech.unity.realm": {
+      "version": "file:./../ChobiLibRealm",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.chobitech.unity": "0.1.0",
+        "io.realm.unity": "20.0.0"
+      }
+    },
     "com.unity.adaptiveperformance": {
       "version": "4.0.1",
       "depth": 1,
@@ -173,6 +182,13 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "io.realm.unity": {
+      "version": "20.0.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://registry.npmjs.org"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

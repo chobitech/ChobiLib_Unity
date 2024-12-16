@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.chobitech.unity": "file:./../ChobiLib",
     "com.unity.collab-proxy": "2.5.2",
     "com.unity.feature.mobile": "1.0.0",
     "com.unity.ide.rider": "3.0.34",
@@ -11,6 +12,7 @@
     "com.unity.toolchain.macos-arm64-linux-x86_64": "2.0.4",
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.9.4",
+    "io.realm.unity": "20.0.0",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
@@ -42,6 +44,15 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0",
-    "com.chobitech.unity": "file:./../ChobiLib"
-  }
+    "com.chobitech.unity.realm": "file:./../ChobiLibRealm"
+  },
+  "scopedRegistries": [
+    {
+      "name": "NPM",
+      "url": "https://registry.npmjs.org",
+      "scopes": [
+        "io.realm.unity"
+      ]
+    }
+  ]
 }
