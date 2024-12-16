@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.chobitech.unity": {
+      "version": "file:./../ChobiLib",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.adaptiveperformance": {
       "version": "4.0.1",
       "depth": 1,
