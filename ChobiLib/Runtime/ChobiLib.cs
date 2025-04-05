@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,6 +11,17 @@ namespace Chobitech
 {
     public static class ChobiLib
     {
+        //---> 2025/04/05 added
+        public static string GetCrossPlatformSavedataPath(string dataDirName = "savedata")
+        {
+            var userDirPath = Application.persistentDataPath;
+            return Path.Combine(userDirPath, dataDirName);
+        }
+        //<---
+
+
+
+
         public static R Let<T, R>(this T t, Func<T, R> func) => func(t);
 
         public static T Also<T>(this T t, UnityAction<T> action) 

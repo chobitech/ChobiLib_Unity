@@ -23,12 +23,24 @@ namespace Chobitech.Realm
         public virtual ulong SchemeVersion { get; } = 1;
         public virtual Type[] SchemeTypes { get; } = null;
 
+        //---> 2025/04/05 added
+        protected virtual byte[] GetEncryptionKey() => null;
+        //<---
+
         protected virtual RealmConfiguration CreateConfiguration()
         {
             var config = new RealmConfiguration(GetRealmFileFullPath())
             {
                 SchemaVersion = SchemeVersion,
             };
+
+            //---> 2025/04/05 added
+            var encKey = GetEncryptionKey();
+            if (encKey != null && encKey.Length == 64)
+            {
+                config.EncryptionKey = encKey;
+            }
+            //<---
 
             if (SchemeTypes != null && SchemeTypes.Length > 0)
             {
