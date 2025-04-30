@@ -1,14 +1,100 @@
-using System.Collections.Generic;
 using UnityEngine;
+
 
 namespace Chobitech.Realm
 {
     using System;
-    using System.IO;
     using Realms;
-    using Realms.Schema;
     using UnityEngine.Events;
 
+    public abstract class AbsRealmMonoBehaviour : MonoBehaviour
+    {
+        public delegate void OnAppQuitEventHandler(Realm realm);
+        public event OnAppQuitEventHandler OnAppQuit;
+
+        public abstract string RealmFileName { get; }
+        public virtual ulong SchemeVersion => 1;
+        public virtual Type[] SchemeTypes => null;
+        public virtual byte[] EncryptKey => null;
+        public virtual ChobiRealm.IChobiRealmProcess ChobiRealmProcess => null;
+
+        private ChobiRealm _chobiRealm;
+        public virtual ChobiRealm ChobiRealm => _chobiRealm ??= new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
+
+        public RealmConfiguration Configuration => ChobiRealm.Configuration;
+
+        public T With<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
+        public void With(UnityAction<Realm> action) => ChobiRealm.With(action);
+
+        public T WithTransaction<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
+        public void WithTransaction(UnityAction<Realm> action) => ChobiRealm.WithTransaction(action);
+
+
+        public virtual void DeleteAllRealm()
+        {
+            _chobiRealm?.DeleteAllRealm();
+        }
+
+        public virtual void DisposeRealm()
+        {
+            _chobiRealm?.Dispose();
+            _chobiRealm = null;
+        }
+
+        protected virtual void OnApplicationQuit()
+        {
+            WithTransaction(r =>
+            {
+                OnAppQuit?.Invoke(r);
+            });
+        }
+
+        protected virtual void OnDestroy()
+        {
+            DisposeRealm();
+        }
+
+
+
+        /*
+        public virtual string RealmFileFullPath => Path.Join(Application.persistentDataPath, RealmFileName);
+
+
+        private Realm _realm;
+        public Realm Realm
+        {
+            get
+            {
+                _realm ??= Realm.GetInstance(Configuration);
+                return _realm;
+            }
+        }
+
+        public virtual RealmConfiguration CreateConfiguration()
+        {
+            return ((IChobiRealm)this).CreateConfiguration();
+        }
+
+
+
+        private RealmConfiguration _configuration;
+        public RealmConfiguration Configuration
+        {
+            get
+            {
+                _configuration ??= CreateConfiguration();
+                return _configuration;
+            }
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+        */
+    }
+
+    /*
     public abstract class AbsRealmMonoBehaviour : MonoBehaviour
     {
         public delegate void OnAppQuitEventHandler(Realm realm);
@@ -118,5 +204,6 @@ namespace Chobitech.Realm
             DisposeRealm();
         }
     }
+    */
 
 }

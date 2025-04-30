@@ -4,52 +4,11 @@ namespace Chobitech.Realm
 {
     using System;
     using System.Collections;
-    using System.IO;
-    using System.Security.Cryptography;
     using Realms;
     using UnityEngine.Events;
 
     public static class ChobiLibRealm
     {
-        public const int RealmEncryptionKeyBytes = 64;
-
-        public static byte[] LoadRealmEncryptionKey(string filePath, bool createNewIfNotExists = true)
-        {
-            byte[] data = null;
-
-            try {
-                if (File.Exists(filePath))
-                {
-                    data = File.ReadAllBytes(filePath);
-                }
-                else
-                {
-                    if (createNewIfNotExists)
-                    {
-                        data = GenerateRealmEncryptionKey();
-                        File.WriteAllBytes(filePath, data);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                data = null;
-            }
-
-            return data;
-        }
-
-        public static byte[] GenerateRealmEncryptionKey()
-        {
-            var key = new byte[RealmEncryptionKeyBytes];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(key);
-            }
-            return key;
-        }
-
-
         public static T WithTransaction<T>(this Realm realm, Func<Realm, T> func)
         {
             if (realm.IsInTransaction)
