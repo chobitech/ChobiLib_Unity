@@ -51,9 +51,7 @@ namespace Chobitech.Realm
 
         public interface IChobiRealmProcess : IDisposable
         {
-            string RealmFileName { get; }
-
-            string GetRealmFileFullPath();
+            string GetRealmFileFullPath(string realmFileName);
 
             RealmConfiguration CreateConfiguration();
             T With<T>(Func<Realm, T> func);
@@ -65,8 +63,10 @@ namespace Chobitech.Realm
             void DeleteAllRealm();
         }
 
-        public string RealmFileName { get; private set; }
+        //private string _realmFileName;
+        //public string RealmFileName => (process != this) ? process.RealmFileName : _realmFileName;
 
+        public readonly string realmFileName;
         public readonly ulong schemeVersion;
         public readonly Type[] schemeTypes;
         public readonly byte[] encryptKey;
@@ -87,18 +87,24 @@ namespace Chobitech.Realm
             IChobiRealmProcess process = null
         )
         {
-            RealmFileName = realmFileName;
+            this.realmFileName = realmFileName;
             this.schemeVersion = schemeVersion;
             this.schemeTypes = schemeTypes;
             this.encryptKey = encryptKey;
             this.process = process ?? this;
         }
 
+        public string GetRealmFileFullPath() => GetRealmFileFullPath(realmFileName);
 
-        public string GetRealmFileFullPath() => Path.Join(Application.persistentDataPath, RealmFileName);
+        public string GetRealmFileFullPath(string fileName) => (process != this) ? process.GetRealmFileFullPath(fileName) : Path.Join(Application.persistentDataPath, fileName);
 
         public RealmConfiguration CreateConfiguration()
         {
+            if (process != this)
+            {
+                return process.CreateConfiguration();
+            }
+
             var config = new RealmConfiguration(GetRealmFileFullPath())
             {
                 SchemaVersion = schemeVersion,
@@ -131,21 +137,53 @@ namespace Chobitech.Realm
             return config;
         }
 
-        public T With<T>(Func<Realm, T> func) => func(Realm);
+        public T With<T>(Func<Realm, T> func) => (process != this) ? process.With(func) : func(Realm);
 
-        public void With(UnityAction<Realm> action) => action(Realm);
+        public void With(UnityAction<Realm> action)
+        {
+            if (process != this)
+            {
+                process.With(action);
+            }
+            else
+            {
+                action(Realm);
+            }
+        }
 
-        public T WithTransaction<T>(Func<Realm, T> func) => Realm.WithTransaction(func);
-        public void WithTransaction(UnityAction<Realm> action) => Realm.WithTransaction(action);
+        public T WithTransaction<T>(Func<Realm, T> func) => (process != this) ? process.WithTransaction(func) : Realm.WithTransaction(func);
+        public void WithTransaction(UnityAction<Realm> action)
+        {
+            if (process != this)
+            {
+                process.WithTransaction(action);
+            }
+            else
+            {
+                Realm.WithTransaction(action);
+            }
+        }
 
         public void Dispose()
         {
+            if (process != this)
+            {
+                process.Dispose();
+                return;
+            }
+
             _realm?.Dispose();
             _realm = null;
         }
 
         public void DeleteAllRealm()
         {            
+            if (process != this)
+            {
+                process.DeleteAllRealm();
+                return;
+            }
+
             Dispose();
             Realm.DeleteRealm(Configuration);
             _configuration = null;
