@@ -65,8 +65,6 @@ namespace Chobitech.Realm
             void DeleteAllRealm();
         }
 
-
-        //public readonly string realmFileName;
         public string RealmFileName { get; private set; }
 
         public readonly ulong schemeVersion;
@@ -97,17 +95,10 @@ namespace Chobitech.Realm
         }
 
 
-        public string GetRealmFileFullPath()
-        {
-            return process?.GetRealmFileFullPath() ?? Path.Join(Application.persistentDataPath, RealmFileName);
-        }
+        public string GetRealmFileFullPath() => Path.Join(Application.persistentDataPath, RealmFileName);
 
         public RealmConfiguration CreateConfiguration()
         {
-            if (process != null) {
-                return process.CreateConfiguration();
-            }
-
             var config = new RealmConfiguration(GetRealmFileFullPath())
             {
                 SchemaVersion = schemeVersion,
@@ -140,75 +131,21 @@ namespace Chobitech.Realm
             return config;
         }
 
-        public T With<T>(Func<Realm, T> func)
-        {
-            if (process != null)
-            {
-                return process.With(func);
-            }
-            else
-            {
-                return func(Realm);
-            }
-        }
+        public T With<T>(Func<Realm, T> func) => func(Realm);
 
-        public void With(UnityAction<Realm> action)
-        {
-            if (process != null)
-            {
-                process?.With(action);
-            }
-            else
-            {
-                action(Realm);
-            }
-        }
+        public void With(UnityAction<Realm> action) => action(Realm);
 
-        public T WithTransaction<T>(Func<Realm, T> func)
-        {
-            if (process != null)
-            {
-                return process.WithTransaction(func);
-            }
-            else
-            {
-                return Realm.WithTransaction(func);
-            }
-        }
-
-
-        public void WithTransaction(UnityAction<Realm> action)
-        {
-            if (process != null)
-            {
-                process.WithTransaction(action);
-            }
-            else
-            {
-                Realm.WithTransaction(action);
-            }
-        }
+        public T WithTransaction<T>(Func<Realm, T> func) => Realm.WithTransaction(func);
+        public void WithTransaction(UnityAction<Realm> action) => Realm.WithTransaction(action);
 
         public void Dispose()
         {
-            if (process != null)
-            {
-                process.Dispose();
-                return;
-            }
-
             _realm?.Dispose();
             _realm = null;
         }
 
         public void DeleteAllRealm()
-        {
-            if (process != null)
-            {
-                process.DeleteAllRealm();
-                return;
-            }
-            
+        {            
             Dispose();
             Realm.DeleteRealm(Configuration);
             _configuration = null;

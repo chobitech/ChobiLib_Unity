@@ -20,5 +20,7 @@ public class RealmTest : AbsRealmMonoBehaviour
         DeleteAllRealm();
 
         //_ = Realm;
+
+        Debug.Log(GetRealmFileFullPath());
     }
 }
