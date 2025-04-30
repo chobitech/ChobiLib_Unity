@@ -70,8 +70,7 @@ namespace Chobitech.Realm
 
         public readonly IChobiRealmProcess process;
 
-        private RealmConfiguration _configuration;
-        public RealmConfiguration Configuration => _configuration ??= CreateConfiguration();
+        public RealmConfiguration Configuration { get; private set; }
 
         private Realm _realm;
         public Realm Realm => _realm ??= Realm.GetInstance(Configuration);
@@ -89,6 +88,8 @@ namespace Chobitech.Realm
             this.schemeTypes = schemeTypes;
             this.encryptKey = encryptKey;
             this.process = process ?? this;
+
+            Configuration = CreateConfiguration();
         }
 
         public string GetRealmFileFullPath() => GetRealmFileFullPath(realmFileName);
@@ -183,7 +184,6 @@ namespace Chobitech.Realm
 
             Dispose();
             Realm.DeleteRealm(Configuration);
-            _configuration = null;
         }
 
     }
