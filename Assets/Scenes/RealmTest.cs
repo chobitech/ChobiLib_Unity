@@ -19,6 +19,6 @@ public class RealmTest : AbsRealmMonoBehaviour
     {
         DeleteAllRealm();
 
-        _ = Realm;
+        //_ = Realm;
     }
 }

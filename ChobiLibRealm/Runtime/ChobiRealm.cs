@@ -51,7 +51,9 @@ namespace Chobitech.Realm
 
         public interface IChobiRealmProcess : IDisposable
         {
-            string GetRealmFileFullPath(string fileName);
+            string RealmFileName { get; }
+
+            string GetRealmFileFullPath();
 
             RealmConfiguration CreateConfiguration();
             T With<T>(Func<Realm, T> func);
@@ -64,7 +66,8 @@ namespace Chobitech.Realm
         }
 
 
-        public readonly string realmFileName;
+        //public readonly string realmFileName;
+        public string RealmFileName { get; private set; }
 
         public readonly ulong schemeVersion;
         public readonly Type[] schemeTypes;
@@ -86,7 +89,7 @@ namespace Chobitech.Realm
             IChobiRealmProcess process = null
         )
         {
-            this.realmFileName = realmFileName;
+            RealmFileName = realmFileName;
             this.schemeVersion = schemeVersion;
             this.schemeTypes = schemeTypes;
             this.encryptKey = encryptKey;
@@ -94,9 +97,9 @@ namespace Chobitech.Realm
         }
 
 
-        public string GetRealmFileFullPath(string fileName)
+        public string GetRealmFileFullPath()
         {
-            return process?.GetRealmFileFullPath(fileName) ?? Path.Join(Application.persistentDataPath, realmFileName);
+            return process?.GetRealmFileFullPath() ?? Path.Join(Application.persistentDataPath, RealmFileName);
         }
 
         public RealmConfiguration CreateConfiguration()
@@ -105,7 +108,7 @@ namespace Chobitech.Realm
                 return process.CreateConfiguration();
             }
 
-            var config = new RealmConfiguration(GetRealmFileFullPath(realmFileName))
+            var config = new RealmConfiguration(GetRealmFileFullPath())
             {
                 SchemaVersion = schemeVersion,
             };
