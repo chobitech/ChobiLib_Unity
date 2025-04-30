@@ -39,8 +39,7 @@ namespace Chobitech.Realm
 
         public virtual void DisposeRealm()
         {
-            _chobiRealm?.Dispose();
-            _chobiRealm = null;
+            ChobiRealm.Dispose();
         }
 
         protected virtual void OnApplicationQuit()
