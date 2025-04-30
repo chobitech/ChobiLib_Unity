@@ -63,9 +63,6 @@ namespace Chobitech.Realm
             void DeleteAllRealm();
         }
 
-        //private string _realmFileName;
-        //public string RealmFileName => (process != this) ? process.RealmFileName : _realmFileName;
-
         public readonly string realmFileName;
         public readonly ulong schemeVersion;
         public readonly Type[] schemeTypes;

@@ -1,6 +1,5 @@
 using UnityEngine;
 
-
 namespace Chobitech.Realm
 {
     using System;
@@ -35,7 +34,7 @@ namespace Chobitech.Realm
 
         public virtual void DeleteAllRealm()
         {
-            _chobiRealm?.DeleteAllRealm();
+            ChobiRealm.DeleteAllRealm();
         }
 
         public virtual void DisposeRealm()

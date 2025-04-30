@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Chobitech.Realm;
 using System;
 
@@ -19,8 +16,8 @@ public class RealmTest : AbsRealmMonoBehaviour
     {
         DeleteAllRealm();
 
-        //_ = Realm;
+        _ = ChobiRealm;
 
-        Debug.Log(GetRealmFileFullPath());
+        //Debug.Log(GetRealmFileFullPath());
     }
 }
