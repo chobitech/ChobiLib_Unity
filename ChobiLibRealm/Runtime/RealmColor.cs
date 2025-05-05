@@ -1,4 +1,4 @@
-namespace Chobitech.Realm
+namespace ChobiLib.Unity.Realm
 {
     using MongoDB.Bson;
     using UnityEngine;

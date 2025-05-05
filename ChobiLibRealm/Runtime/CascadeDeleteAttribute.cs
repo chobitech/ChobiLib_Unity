@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Chobitech.Realm
+namespace ChobiLib.Unity.Realm
 {
     public class CascadeDeleteAttribute : Attribute
     {

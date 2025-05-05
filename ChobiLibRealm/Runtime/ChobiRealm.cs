@@ -1,4 +1,4 @@
-namespace Chobitech.Realm
+namespace ChobiLib.Unity.Realm
 {
     using System;
     using System.IO;
