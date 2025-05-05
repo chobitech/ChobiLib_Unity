@@ -1,4 +1,4 @@
-using Chobitech.Realm;
+using ChobiLib.Unity.Realm;
 using System;
 
 public class RealmTest : AbsRealmMonoBehaviour
@@ -7,7 +7,6 @@ public class RealmTest : AbsRealmMonoBehaviour
 
     public override Type[] SchemeTypes => new Type[]
     {
-        typeof(RealmDateTime),
         typeof(RealmColor),
     };
 

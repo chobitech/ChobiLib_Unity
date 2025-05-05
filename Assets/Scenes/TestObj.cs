@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Chobitech;
+using ChobiLib;
 using UnityEngine;
 
 public class TestObj : MonoBehaviour

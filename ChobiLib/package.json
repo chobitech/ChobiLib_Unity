@@ -1,6 +1,6 @@
 {
     "name": "com.chobitech.unity",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "displayName": "ChobiLib",
     "description": "unity library for personal use",
     "unity": "2022.3",
