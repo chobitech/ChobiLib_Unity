@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.Events;
 
-namespace Chobitech
+namespace ChobiLib.Unity
 {
-    public static class ChobiLib
+    public static class ChobiLibUnity
     {
         //---> 2025/04/05 added
         public static string GetCrossPlatformSavedataPath(string dataDirName = "savedata")
@@ -19,9 +15,7 @@ namespace Chobitech
         }
         //<---
 
-
-
-
+        /*
         public static R Let<T, R>(this T t, Func<T, R> func) => func(t);
 
         public static T Also<T>(this T t, UnityAction<T> action) 
@@ -29,15 +23,17 @@ namespace Chobitech
             action(t);
             return t;
         }
+        */
 
-        public static int LastIndex<T>(this IList<T> list) => list.Count - 1;
-        public static bool IsNotEmpty<T>(this IList<T> list) => list.Count > 0;
+        //public static int LastIndex<T>(this IList<T> list) => list.Count - 1;
+        //public static bool IsNotEmpty<T>(this IList<T> list) => list.Count > 0;
 
-        public static bool IsNotEmpty(this StringBuilder sb) => sb.Length > 0;
+        //public static bool IsNotEmpty(this StringBuilder sb) => sb.Length > 0;
 
 
-        public static List<string> ToStringList(this string s) => s.ToCharArray().Select(c => c.ToString()).ToList();
+        //public static List<string> ToStringList(this string s) => s.ToCharArray().Select(c => c.ToString()).ToList();
 
+        /*
         public static string JoinToString<T>(this IList<T> list, string joint = "", Func<T, string> stringConverter = null)
         {
             var converter = stringConverter ?? new(t => t.ToString());
@@ -54,7 +50,9 @@ namespace Chobitech
 
             return sb.ToString();
         }
+        */
 
+        /*
         public static void ForLoopIndexed<T>(this IList<T> list, UnityAction<int, T> action, int step = 1)
         {
             for (var i = 0; i < list.Count; i += step)
@@ -62,7 +60,9 @@ namespace Chobitech
                 action(i, list[i]);
             }
         }
+        */
 
+        /*
         public static List<R> MapIndexed<T, R>(this IList<T> list, Func<int, T, R> converter, int step = 1, bool exceptDefaultValue = false)
         {
             var res = new List<R>();
@@ -79,8 +79,10 @@ namespace Chobitech
             return res;
         }
         public static List<R> Map<T, R>(this IList<T> list, Func<T, R> converter, int step = 1, bool exceptDefaultValue = false) => list.MapIndexed((_, t) => converter(t), step, exceptDefaultValue);
+        */
 
 
+        /*
         public static R FoldIndexed<T, R>(this IList<T> list, R initialValue, Func<int, T, R, R> func, int step = 1)
         {
             var res = initialValue;
@@ -91,6 +93,7 @@ namespace Chobitech
             return res;   
         }
         public static R Fold<T, R>(this IList<T> list, R initialValue, Func<T, R, R> func, int step = 1) => list.FoldIndexed(initialValue, (_, t, r) => func(t, r), step);
+        */
 
 
         //--- added: 2025/01/29

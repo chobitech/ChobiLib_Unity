@@ -1,4 +1,5 @@
 
+/*
 using System.Collections.Generic;
 using Chobitech;
 
@@ -37,3 +38,4 @@ namespace ChobiLib
         public string GetRandomString(int length, bool duplicate = true) => GetRandomArray(length, duplicate).JoinToString();
     }
 }
+*/
