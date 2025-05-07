@@ -1,3 +1,7 @@
 {
-	"name": "ChobiLibRealm"
+	"name": "ChobiLibRealm",
+	"references": [
+		"ChobiLib.Unity",
+		"Realms"
+	]
 }

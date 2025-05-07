@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ChobiLib.Unity
 {
@@ -14,87 +17,6 @@ namespace ChobiLib.Unity
             return Path.Combine(userDirPath, dataDirName);
         }
         //<---
-
-        /*
-        public static R Let<T, R>(this T t, Func<T, R> func) => func(t);
-
-        public static T Also<T>(this T t, UnityAction<T> action) 
-        {
-            action(t);
-            return t;
-        }
-        */
-
-        //public static int LastIndex<T>(this IList<T> list) => list.Count - 1;
-        //public static bool IsNotEmpty<T>(this IList<T> list) => list.Count > 0;
-
-        //public static bool IsNotEmpty(this StringBuilder sb) => sb.Length > 0;
-
-
-        //public static List<string> ToStringList(this string s) => s.ToCharArray().Select(c => c.ToString()).ToList();
-
-        /*
-        public static string JoinToString<T>(this IList<T> list, string joint = "", Func<T, string> stringConverter = null)
-        {
-            var converter = stringConverter ?? new(t => t.ToString());
-            var sb = new StringBuilder();
-
-            foreach (var v in list)
-            {
-                if (joint != "" && sb.IsNotEmpty())
-                {
-                    sb.Append(joint);
-                }
-                sb.Append(converter(v));
-            }
-
-            return sb.ToString();
-        }
-        */
-
-        /*
-        public static void ForLoopIndexed<T>(this IList<T> list, UnityAction<int, T> action, int step = 1)
-        {
-            for (var i = 0; i < list.Count; i += step)
-            {
-                action(i, list[i]);
-            }
-        }
-        */
-
-        /*
-        public static List<R> MapIndexed<T, R>(this IList<T> list, Func<int, T, R> converter, int step = 1, bool exceptDefaultValue = false)
-        {
-            var res = new List<R>();
-
-            for (var i = 0; i < list.Count; i += step)
-            {
-                var v = converter(i, list[i]);
-                if (!exceptDefaultValue || !v.Equals(default))
-                {
-                    res.Add(v);
-                }
-            }
-
-            return res;
-        }
-        public static List<R> Map<T, R>(this IList<T> list, Func<T, R> converter, int step = 1, bool exceptDefaultValue = false) => list.MapIndexed((_, t) => converter(t), step, exceptDefaultValue);
-        */
-
-
-        /*
-        public static R FoldIndexed<T, R>(this IList<T> list, R initialValue, Func<int, T, R, R> func, int step = 1)
-        {
-            var res = initialValue;
-            for (var i = 0; i < list.Count; i += step)
-            {
-                res = func(i, list[i], res);
-            }
-            return res;   
-        }
-        public static R Fold<T, R>(this IList<T> list, R initialValue, Func<T, R, R> func, int step = 1) => list.FoldIndexed(initialValue, (_, t, r) => func(t, r), step);
-        */
-
 
         //--- added: 2025/01/29
         private static readonly Regex hexColorRegex = new(@"^#([0-9a-f]{3,8})$", RegexOptions.IgnoreCase);
@@ -141,5 +63,137 @@ namespace ChobiLib.Unity
         }
 
         public static Color? ToColor(this string hex) => ParseHexToColor(hex);
+
+
+        //---> 2025/05/07 added
+        public static void SetColor(
+            this SpriteRenderer sr,
+            float? red = null,
+            float? green = null,
+            float? blue = null,
+            float? alpha = null)
+        {
+            var c = sr.color;
+            sr.color = new(
+                red ?? c.r,
+                green ?? c.g,
+                blue ?? c.b,
+                alpha ?? c.a
+            );
+        }
+
+        public static void MoveBy(
+            this Transform tr,
+            float dx = 0f,
+            float dy = 0f,
+            float dz = 0f)
+        {
+            var pos = tr.position;
+            tr.position = pos + new Vector3(dx, dy, dz);
+        }
+
+        public static void LocalMoveBy(
+            this Transform tr,
+            float dx = 0f,
+            float dy = 0f,
+            float dz = 0f)
+        {
+            var pos = tr.localPosition;
+            tr.localPosition = pos + new Vector3(dx, dy, dz);
+        }
+
+        public static void SetMargin(
+            this RectTransform rt,
+            float? left = null,
+            float? top = null,
+            float? right = null,
+            float? bottom = null)
+        {
+            var leftBottom = rt.offsetMin;
+            rt.offsetMin = new(
+                left ?? leftBottom.x,
+                bottom ?? leftBottom.y
+            );
+
+            var rightTop = rt.offsetMax;
+            rt.offsetMax = new(
+                -right ?? rightTop.x,
+                -top ?? rightTop.y
+            );
+        }
+
+        public static IEnumerator FadeAnimationProcess(
+            this CanvasGroup canvasGroup,
+            bool isFadeIn,
+            float durationSec,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<float> onFading = null,
+            UnityAction onFinished = null)
+        {
+            var curAlpha = canvasGroup.alpha;
+
+            var sAlpha = startAlpha ?? curAlpha;
+            var eAlpha = endAlpha ?? (isFadeIn ? 1f : 0f);
+
+            if (sAlpha == eAlpha)
+            {
+                yield break;
+            }
+
+            var gObj = canvasGroup.gameObject;
+
+            gObj.SetActive(true);
+
+            var fadeSec = useFlexibleDuration
+                ? durationSec * Mathf.Clamp01(Mathf.Abs(eAlpha - sAlpha))
+                : durationSec;
+
+            var curTime = 0f;
+
+            while (curTime < fadeSec)
+            {
+                var rate = curTime / fadeSec;
+                canvasGroup.alpha = Mathf.Lerp(sAlpha, eAlpha, rate);
+                onFading?.Invoke(rate);
+                curTime += Time.deltaTime;
+                yield return null;
+            }
+
+            canvasGroup.alpha = eAlpha;
+
+            if (!isFadeIn)
+            {
+                gObj.SetActive(false);
+            }
+
+            onFinished?.Invoke();
+        }
+
+        public static Coroutine StartCanvasGroupFadeCoroutine(
+            this MonoBehaviour mb,
+            CanvasGroup canvasGroup,
+            bool isFadeIn,
+            float durationSec,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<float> onFading = null,
+            UnityAction onFinished = null)
+        {
+            return mb.StartCoroutine(
+                canvasGroup.FadeAnimationProcess(
+                    isFadeIn,
+                    durationSec,
+                    startAlpha,
+                    endAlpha,
+                    useFlexibleDuration,
+                    onFading,
+                    onFinished
+                )
+            );
+        }
+        //<---
     }
 }
