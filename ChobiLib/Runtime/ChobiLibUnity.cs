@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -192,6 +193,20 @@ namespace ChobiLib.Unity
                     onFading,
                     onFinished
                 )
+            );
+        }
+        //<---
+
+        //---> 2025/05/08 added
+        public static void SetSize(
+            this RectTransform rt,
+            float? width = null,
+            float? height = null)
+        {
+            var size = rt.sizeDelta;
+            rt.sizeDelta = new Vector2(
+                width ?? size.x,
+                height ?? size.y
             );
         }
         //<---
