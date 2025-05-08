@@ -1,9 +1,8 @@
 using System;
 using System.Collections;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using NUnit.Framework;
+using log4net.Filter;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -209,6 +208,183 @@ namespace ChobiLib.Unity
                 height ?? size.y
             );
         }
+        //<---
+
+        //---> 2025/05/09
+        public static IEnumerator ToRoutine(this UnityAction action)
+        {
+            action();
+            yield break;
+        }
+
+        public static float GetStartValue(this AnimationCurve curve) => curve.keys[0].value;
+        public static float GetEndValue(this AnimationCurve curve) => curve.keys[^1].value;
+        public static float GetValueRange(this AnimationCurve curve) => curve.GetEndValue() - curve.GetStartValue();
+
+        public static float GetStartTime(this AnimationCurve curve) => curve.keys[0].time;
+        public static float GetEndTime(this AnimationCurve curve) => curve.keys[^1].time;
+        public static float GetDurationSec(this AnimationCurve curve) => curve.GetEndTime() - curve.GetStartTime();
+
+        public static bool IsValidAnimation(this AnimationCurve curve) => curve.GetDurationSec() > 0f && (curve.GetStartValue() != curve.GetEndValue());
+
+        private static readonly AnimationCurve DefaultLinearCurve = AnimationCurve.Linear(0, 0, 1, 1);
+        private static readonly AnimationCurve DefaultReverseLinearCurve = AnimationCurve.Linear(0, 1, 1, 0);
+
+        public static IEnumerator LerpRoutine(
+            UnityAction<float> onProgress,
+            AnimationCurve animationCurve = null,
+            UnityAction onFinished = null)
+        {
+            animationCurve ??= DefaultLinearCurve;
+
+            if (!animationCurve.IsValidAnimation())
+            {
+                yield break;
+            }
+
+            var startSec = animationCurve.GetStartTime();
+            var endSec = animationCurve.GetEndTime();
+            var durationSec = endSec - startSec;
+
+            var startValue = animationCurve.GetStartValue();
+            var endValue = animationCurve.GetEndValue();
+
+            var ct = 0f;
+            while (ct < durationSec)
+            {
+                float progress = animationCurve.Evaluate(Mathf.Lerp(startSec, endSec, ct / durationSec));
+                onProgress?.Invoke(progress);
+                ct += Time.deltaTime;
+                yield return null;
+            }
+
+            onProgress?.Invoke(endValue);
+            
+            onFinished?.Invoke();
+        }
+
+        public static Coroutine StartLerpRoutine(
+            this MonoBehaviour mb,
+            UnityAction<float> onProgress,
+            AnimationCurve animationCurve = null,
+            UnityAction onFinished = null)
+        {
+            return mb.StartCoroutine(
+                LerpRoutine(onProgress, animationCurve, onFinished)
+            );
+        }
+
+        /// <summary>
+        /// Linear lerp routine
+        /// </summary>
+        /// <param name="durationSec"></param>
+        /// <param name="onProgress"></param>
+        /// <param name="startValue"></param>
+        /// <param name="endValue"></param>
+        /// <param name="onFinished"></param>
+        /// <returns></returns>
+        public static IEnumerator LerpRoutine(
+            float durationSec,
+            UnityAction<float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            UnityAction onFinished = null) => LerpRoutine(
+                onProgress,
+                AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                onFinished
+            );
+        
+        public static Coroutine StartLerpRoutine(
+            this MonoBehaviour mb,
+            float durationSec,
+            UnityAction<float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            UnityAction onFinished = null) => mb.StartLerpRoutine(
+                onProgress,
+                AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                onFinished
+            );
+
+        /// <summary>
+        /// Executes the ping-pong routine
+        /// </summary>
+        /// <param name="onProgress">first: true if backward phase, second: progress value</param>
+        /// <param name="forwardAnimationCurve"></param>
+        /// <param name="backwardAnimationCurve"></param>
+        /// <param name="onForwardCompleted"></param>
+        /// <param name="onRoutineFinished"></param>
+        /// <returns></returns>
+        public static IEnumerator PingPongRoutine(
+            UnityAction<bool, float> onProgress,
+            AnimationCurve forwardAnimationCurve = null,
+            AnimationCurve backwardAnimationCurve = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null)
+        {
+            forwardAnimationCurve ??= DefaultLinearCurve;
+            backwardAnimationCurve ??= DefaultReverseLinearCurve;
+
+            yield return LerpRoutine(
+                progress => onProgress?.Invoke(false, progress),
+                forwardAnimationCurve,
+                onForwardCompleted
+            );
+
+            yield return LerpRoutine(
+                progress => onProgress?.Invoke(true, progress),
+                backwardAnimationCurve,
+                onRoutineFinished
+            );
+        }
+
+        public static Coroutine StartPingPongRoutine(
+            this MonoBehaviour mb,
+            UnityAction<bool, float> onProgress,
+            AnimationCurve forwardAnimationCurve = null,
+            AnimationCurve backwardAnimationCurve = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null)
+        {
+            return mb.StartCoroutine(
+                PingPongRoutine(
+                    onProgress,
+                    forwardAnimationCurve,
+                    backwardAnimationCurve,
+                    onForwardCompleted,
+                    onRoutineFinished
+                )
+            );
+        }
+
+        public static IEnumerator PingPongRoutine(
+            float durationSec,
+            UnityAction<bool, float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => PingPongRoutine(
+                onProgress,
+                AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                AnimationCurve.Linear(0f, endValue, durationSec, startValue),
+                onForwardCompleted,
+                onRoutineFinished
+            );
+        
+        public static Coroutine StartPingPongRoutine(
+            this MonoBehaviour mb,
+            float durationSec,
+            UnityAction<bool, float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => mb.StartPingPongRoutine(
+                onProgress,
+                AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                AnimationCurve.Linear(0f, endValue, durationSec, startValue),
+                onForwardCompleted,
+                onRoutineFinished
+            );
         //<---
     }
 }
