@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
-using log4net.Filter;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -122,15 +121,17 @@ namespace ChobiLib.Unity
             );
         }
 
-        public static IEnumerator FadeAnimationProcess(
+
+        //---> revised and added at 2025/05/09
+        public static IEnumerator FadeAnimationRoutine(
             this CanvasGroup canvasGroup,
             bool isFadeIn,
             float durationSec,
             float? startAlpha = null,
             float? endAlpha = null,
             bool useFlexibleDuration = true,
-            UnityAction<float> onFading = null,
-            UnityAction onFinished = null)
+            UnityAction<float> onProgress = null,
+            UnityAction onRoutineFinished = null)
         {
             var curAlpha = canvasGroup.alpha;
 
@@ -139,37 +140,67 @@ namespace ChobiLib.Unity
 
             if (sAlpha == eAlpha)
             {
+                onRoutineFinished?.Invoke();
                 yield break;
             }
-
-            var gObj = canvasGroup.gameObject;
-
-            gObj.SetActive(true);
 
             var fadeSec = useFlexibleDuration
                 ? durationSec * Mathf.Clamp01(Mathf.Abs(eAlpha - sAlpha))
                 : durationSec;
+            
+            var gObj = canvasGroup.gameObject;
+            gObj.SetActive(true);
 
-            var curTime = 0f;
-
-            while (curTime < fadeSec)
-            {
-                var rate = curTime / fadeSec;
-                canvasGroup.alpha = Mathf.Lerp(sAlpha, eAlpha, rate);
-                onFading?.Invoke(rate);
-                curTime += Time.deltaTime;
-                yield return null;
-            }
-
-            canvasGroup.alpha = eAlpha;
-
-            if (!isFadeIn)
-            {
-                gObj.SetActive(false);
-            }
-
-            onFinished?.Invoke();
+            yield return LerpRoutine(
+                fadeSec,
+                alpha =>{
+                    canvasGroup.alpha = alpha;
+                    onProgress?.Invoke(alpha);
+                },
+                sAlpha,
+                eAlpha,
+                () =>
+                {
+                    if (!isFadeIn)
+                    {
+                        gObj.SetActive(false);
+                    }
+                    onRoutineFinished?.Invoke();
+                }
+            );
         }
+
+        public static IEnumerator FadeInAndOutRoutine(
+            this CanvasGroup canvasGroup,
+            float durationSecOnOnWay,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<bool, float> onProgress = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null)
+        {
+            yield return canvasGroup.FadeAnimationRoutine(
+                true,
+                durationSecOnOnWay,
+                startAlpha,
+                endAlpha,
+                useFlexibleDuration,
+                alpha => onProgress?.Invoke(false, alpha),
+                onForwardCompleted
+            );
+
+            yield return canvasGroup.FadeAnimationRoutine(
+                false,
+                durationSecOnOnWay,
+                endAlpha,
+                startAlpha,
+                useFlexibleDuration,
+                alpha => onProgress?.Invoke(true, alpha),
+                onRoutineFinished
+            );
+        }
+        //<---
 
         public static Coroutine StartCanvasGroupFadeCoroutine(
             this MonoBehaviour mb,
@@ -183,7 +214,7 @@ namespace ChobiLib.Unity
             UnityAction onFinished = null)
         {
             return mb.StartCoroutine(
-                canvasGroup.FadeAnimationProcess(
+                canvasGroup.FadeAnimationRoutine(
                     isFadeIn,
                     durationSec,
                     startAlpha,
