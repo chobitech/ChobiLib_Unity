@@ -177,7 +177,7 @@ namespace ChobiLib.Unity
             float? endAlpha = null,
             bool useFlexibleDuration = true,
             UnityAction<bool, float> onProgress = null,
-            UnityAction onForwardCompleted = null,
+            IEnumerator onForwardCompletedRoutine = null,
             UnityAction onRoutineFinished = null)
         {
             yield return canvasGroup.FadeAnimationRoutine(
@@ -186,9 +186,10 @@ namespace ChobiLib.Unity
                 startAlpha,
                 endAlpha,
                 useFlexibleDuration,
-                alpha => onProgress?.Invoke(false, alpha),
-                onForwardCompleted
+                alpha => onProgress?.Invoke(false, alpha)
             );
+
+            yield return onForwardCompletedRoutine;
 
             yield return canvasGroup.FadeAnimationRoutine(
                 false,
@@ -200,6 +201,24 @@ namespace ChobiLib.Unity
                 onRoutineFinished
             );
         }
+
+        public static IEnumerator FadeInAndOutRoutine(
+            this CanvasGroup canvasGroup,
+            float durationSecOnOnWay,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<bool, float> onProgress = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => canvasGroup.FadeInAndOutRoutine(
+                durationSecOnOnWay,
+                startAlpha,
+                endAlpha,
+                useFlexibleDuration,
+                onProgress,
+                onForwardCompleted?.ToRoutine(),
+                onRoutineFinished
+            );
         //<---
 
         public static Coroutine StartCanvasGroupFadeCoroutine(
@@ -225,6 +244,51 @@ namespace ChobiLib.Unity
                 )
             );
         }
+
+        public static Coroutine StartCanvasGroupFadeInAndOutCoroutine(
+            this MonoBehaviour mb,
+            CanvasGroup canvasGroup,
+            float durationSecOnOnWay,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<bool, float> onProgress = null,
+            IEnumerator onForwardCompletedRoutine = null,
+            UnityAction onRoutineFinished = null
+        )
+        {
+            return mb.StartCoroutine(
+                canvasGroup.FadeInAndOutRoutine(
+                    durationSecOnOnWay,
+                    startAlpha,
+                    endAlpha,
+                    useFlexibleDuration,
+                    onProgress,
+                    onForwardCompletedRoutine,
+                    onRoutineFinished
+                )
+            );
+        }
+
+        public static Coroutine StartCanvasGroupFadeInAndOutCoroutine(
+            this MonoBehaviour mb,
+            CanvasGroup canvasGroup,
+            float durationSecOnOnWay,
+            float? startAlpha = null,
+            float? endAlpha = null,
+            bool useFlexibleDuration = true,
+            UnityAction<bool, float> onProgress = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => mb.StartCanvasGroupFadeInAndOutCoroutine(
+                canvasGroup,
+                durationSecOnOnWay,
+                startAlpha,
+                endAlpha,
+                useFlexibleDuration,
+                onProgress,
+                onForwardCompleted?.ToRoutine(),
+                onRoutineFinished
+            );
         //<---
 
         //---> 2025/05/08 added
