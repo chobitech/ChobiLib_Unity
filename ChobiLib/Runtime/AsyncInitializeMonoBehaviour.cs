@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class AsyncInitializeMonoBehaviour : ChobiMonoBehaviour
+public abstract class AsyncInitializeMonoBehaviour : SelfObjectHoldingMonoBehaviour
 {
     private static readonly List<AsyncInitializeMonoBehaviour> globalCheckTargetList = new();
 
