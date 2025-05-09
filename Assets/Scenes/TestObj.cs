@@ -1,9 +1,15 @@
+using System.Collections;
 using System.Security.Cryptography;
 using ChobiLib;
 using UnityEngine;
 
-public class TestObj : MonoBehaviour
+public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
 {
+    protected override IEnumerator InitializeRoutine()
+    {
+        yield break;
+    }
+
     // Start is called before the first frame update
     void Start()
     {

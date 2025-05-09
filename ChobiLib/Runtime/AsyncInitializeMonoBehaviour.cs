@@ -3,14 +3,51 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class AsyncInitializeMonoBehaviour : SelfObjectHoldingMonoBehaviour
+
+public abstract class BaseAsyncInitializeMonoBehaviour : SelfObjectHoldingMonoBehaviour
+{    
+    public bool IsInitialized { get; private set; }
+
+    protected abstract IEnumerator InitializeRoutine();
+
+    protected virtual void InnerOnFinishedAction() {}
+
+    protected virtual bool IsGlobalCheckTarget { get; }
+
+    private Coroutine initializeCoroutine;
+
+    private IEnumerator InnerInitializeRoutine()
+    {
+        yield return InitializeRoutine();
+
+        IsInitialized = true;
+        initializeCoroutine = null;
+
+        InnerOnFinishedAction();
+    }
+
+    public void ResetInitializedState() => IsInitialized = false;
+
+    protected void StartInitialize()
+    {
+        if (IsInitialized || initializeCoroutine != null)
+        {
+            return;
+        }
+
+        initializeCoroutine = StartCoroutine(InnerInitializeRoutine());
+    }
+}
+
+
+public abstract class AsyncInitializeMonoBehaviour<T> : BaseAsyncInitializeMonoBehaviour where T : AsyncInitializeMonoBehaviour<T>
 {
-    private static readonly List<AsyncInitializeMonoBehaviour> globalCheckTargetList = new();
+    private static readonly List<BaseAsyncInitializeMonoBehaviour> globalCheckTargetList = new();
 
-    public static AsyncInitializeMonoBehaviour[] GlobalCheckTargets => globalCheckTargetList.ToArray();
+    public static BaseAsyncInitializeMonoBehaviour[] GlobalCheckTargets => globalCheckTargetList.ToArray();
 
-    public static void AddToGlobalCheckTarget(AsyncInitializeMonoBehaviour mb) => globalCheckTargetList.Add(mb);
-    public static void RemoveFromGlobalCheckTarget(AsyncInitializeMonoBehaviour mb) => globalCheckTargetList.Remove(mb);
+    public static void AddToGlobalCheckTarget(BaseAsyncInitializeMonoBehaviour mb) => globalCheckTargetList.Add(mb);
+    public static void RemoveFromGlobalCheckTarget(BaseAsyncInitializeMonoBehaviour mb) => globalCheckTargetList.Remove(mb);
 
     public static bool IsAllGlobalCheckTargetInitialized
     {
@@ -45,17 +82,8 @@ public abstract class AsyncInitializeMonoBehaviour : SelfObjectHoldingMonoBehavi
     }
 
 
-    //---
-
-
-    public bool IsInitialized { get; private set; }
-
-    protected abstract IEnumerator InitializeRoutine();
-    protected virtual bool IsGlobalCheckTarget { get; }
-
-    private UnityAction onFinishedActions;
-
-    public void ExecuteOnFinished(UnityAction action)
+    private UnityAction<T> onFinishedActions;
+    public void ExecuteOnFinished(UnityAction<T> action)
     {
         if (action == null)
         {
@@ -68,34 +96,15 @@ public abstract class AsyncInitializeMonoBehaviour : SelfObjectHoldingMonoBehavi
         }
         else
         {
-            action();
+            action((T)(object)this);
         }
     }
 
 
-    private IEnumerator InnerInitializeRoutine()
+    protected override void InnerOnFinishedAction()
     {
-        yield return InitializeRoutine();
-
-        IsInitialized = true;
-        initializeCoroutine = null;
-
-        onFinishedActions?.Invoke();
+        onFinishedActions?.Invoke((T)(object)this);
         onFinishedActions = null;
-    }
-
-    private Coroutine initializeCoroutine;
-
-    public void ResetInitializedState() => IsInitialized = false;
-
-    protected void StartInitialize()
-    {
-        if (IsInitialized || initializeCoroutine != null)
-        {
-            return;
-        }
-
-        initializeCoroutine = StartCoroutine(InnerInitializeRoutine());
     }
 
     protected override void Awake()
