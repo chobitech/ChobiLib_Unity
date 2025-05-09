@@ -27,6 +27,23 @@ public abstract class AsyncInitializeMonoBehaviour : ChobiMonoBehaviour
         }
     }
 
+    public static IEnumerator OnGlobalCheckTargetsInitializedRoutine(UnityAction onAllInitialized)
+    {
+        while (!IsAllGlobalCheckTargetInitialized)
+        {
+            yield return null;
+        }
+
+        onAllInitialized?.Invoke();
+    }
+
+    public static Coroutine ExecuteOnGlobalCheckTargetInitialized(MonoBehaviour mb, UnityAction onAllInitialized)
+    {
+        return mb.StartCoroutine(
+            OnGlobalCheckTargetsInitializedRoutine(onAllInitialized)
+        );
+    }
+
 
     //---
 
