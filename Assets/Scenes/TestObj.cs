@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Security.Cryptography;
 using ChobiLib;
+using ChobiLib.Unity;
 using UnityEngine;
 
 public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
