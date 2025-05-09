@@ -261,10 +261,11 @@ namespace ChobiLib.Unity
         private static readonly AnimationCurve DefaultLinearCurve = AnimationCurve.Linear(0, 0, 1, 1);
         private static readonly AnimationCurve DefaultReverseLinearCurve = AnimationCurve.Linear(0, 1, 1, 0);
 
+
         public static IEnumerator LerpRoutine(
             UnityAction<float> onProgress,
             AnimationCurve animationCurve = null,
-            UnityAction onFinished = null)
+            IEnumerator onFinishedRoutine = null)
         {
             animationCurve ??= DefaultLinearCurve;
 
@@ -291,19 +292,38 @@ namespace ChobiLib.Unity
 
             onProgress?.Invoke(endValue);
             
-            onFinished?.Invoke();
+            yield return onFinishedRoutine;
+        }
+        public static IEnumerator LerpRoutine(
+            UnityAction<float> onProgress,
+            AnimationCurve animationCurve = null,
+            UnityAction onFinished = null) => LerpRoutine(
+                onProgress,
+                animationCurve,
+                onFinished?.ToRoutine()
+            );
+
+        public static Coroutine StartLerpRoutine(
+            this MonoBehaviour mb,
+            UnityAction<float> onProgress,
+            AnimationCurve animationCurve = null,
+            IEnumerator onFinishedRoutine = null)
+        {
+            return mb.StartCoroutine(
+                LerpRoutine(onProgress, animationCurve, onFinishedRoutine)
+            );
         }
 
         public static Coroutine StartLerpRoutine(
             this MonoBehaviour mb,
             UnityAction<float> onProgress,
             AnimationCurve animationCurve = null,
-            UnityAction onFinished = null)
-        {
-            return mb.StartCoroutine(
-                LerpRoutine(onProgress, animationCurve, onFinished)
+            UnityAction onFinished = null) => mb.StartLerpRoutine(
+                onProgress,
+                animationCurve,
+                onFinished?.ToRoutine()
             );
-        }
+
 
         /// <summary>
         /// Linear lerp routine
@@ -319,11 +339,24 @@ namespace ChobiLib.Unity
             UnityAction<float> onProgress,
             float startValue = 0f,
             float endValue = 1f,
-            UnityAction onFinished = null) => LerpRoutine(
+            IEnumerator onFinishedRoutine = null) => LerpRoutine(
                 onProgress,
                 AnimationCurve.Linear(0, startValue, durationSec, endValue),
-                onFinished
+                onFinishedRoutine
             );
+        public static IEnumerator LerpRoutine(
+            float durationSec,
+            UnityAction<float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            UnityAction onFinished = null) => LerpRoutine(
+                durationSec,
+                onProgress,
+                startValue,
+                endValue,
+                onFinished?.ToRoutine()
+            );
+ 
         
         public static Coroutine StartLerpRoutine(
             this MonoBehaviour mb,
@@ -331,10 +364,31 @@ namespace ChobiLib.Unity
             UnityAction<float> onProgress,
             float startValue = 0f,
             float endValue = 1f,
+            IEnumerator onFinishedRoutine = null)
+            {
+                return mb.StartCoroutine(
+                    LerpRoutine(
+                        durationSec,
+                        onProgress,
+                        startValue,
+                        endValue,
+                        onFinishedRoutine
+                    )
+                );
+            }
+
+        public static Coroutine StartLerpRoutine(
+            this MonoBehaviour mb,
+            float durationSec,
+            UnityAction<float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
             UnityAction onFinished = null) => mb.StartLerpRoutine(
+                durationSec,
                 onProgress,
-                AnimationCurve.Linear(0, startValue, durationSec, endValue),
-                onFinished
+                startValue,
+                endValue,
+                onFinished?.ToRoutine()
             );
 
         /// <summary>
@@ -350,7 +404,7 @@ namespace ChobiLib.Unity
             UnityAction<bool, float> onProgress,
             AnimationCurve forwardAnimationCurve = null,
             AnimationCurve backwardAnimationCurve = null,
-            UnityAction onForwardCompleted = null,
+            IEnumerator onForwardCompletedRoutine = null,
             UnityAction onRoutineFinished = null)
         {
             forwardAnimationCurve ??= DefaultLinearCurve;
@@ -359,7 +413,7 @@ namespace ChobiLib.Unity
             yield return LerpRoutine(
                 progress => onProgress?.Invoke(false, progress),
                 forwardAnimationCurve,
-                onForwardCompleted
+                onForwardCompletedRoutine
             );
 
             yield return LerpRoutine(
@@ -369,12 +423,26 @@ namespace ChobiLib.Unity
             );
         }
 
+        public static IEnumerator PingPongRoutine(
+            UnityAction<bool, float> onProgress,
+            AnimationCurve forwardAnimationCurve = null,
+            AnimationCurve backwardAnimationCurve = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => PingPongRoutine(
+                onProgress,
+                forwardAnimationCurve,
+                backwardAnimationCurve,
+                onForwardCompleted?.ToRoutine(),
+                onRoutineFinished
+            );
+
+
         public static Coroutine StartPingPongRoutine(
             this MonoBehaviour mb,
             UnityAction<bool, float> onProgress,
             AnimationCurve forwardAnimationCurve = null,
             AnimationCurve backwardAnimationCurve = null,
-            UnityAction onForwardCompleted = null,
+            IEnumerator onForwardCompletedRoutine = null,
             UnityAction onRoutineFinished = null)
         {
             return mb.StartCoroutine(
@@ -382,12 +450,43 @@ namespace ChobiLib.Unity
                     onProgress,
                     forwardAnimationCurve,
                     backwardAnimationCurve,
-                    onForwardCompleted,
+                    onForwardCompletedRoutine,
                     onRoutineFinished
                 )
             );
         }
 
+        public static Coroutine StartPingPongRoutine(
+            this MonoBehaviour mb,
+            UnityAction<bool, float> onProgress,
+            AnimationCurve forwardAnimationCurve = null,
+            AnimationCurve backwardAnimationCurve = null,
+            UnityAction onForwardCompleted = null,
+            UnityAction onRoutineFinished = null) => mb.StartPingPongRoutine(
+                onProgress,
+                forwardAnimationCurve,
+                backwardAnimationCurve,
+                onForwardCompleted?.ToRoutine(),
+                onRoutineFinished
+            );
+
+
+
+
+        public static IEnumerator PingPongRoutine(
+            float durationSec,
+            UnityAction<bool, float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            IEnumerator onForwardCompletedRoutine = null,
+            UnityAction onRoutineFinished = null) => PingPongRoutine(
+                onProgress,
+                AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                AnimationCurve.Linear(0f, endValue, durationSec, startValue),
+                onForwardCompletedRoutine,
+                onRoutineFinished
+            );
+        
         public static IEnumerator PingPongRoutine(
             float durationSec,
             UnityAction<bool, float> onProgress,
@@ -395,13 +494,35 @@ namespace ChobiLib.Unity
             float endValue = 1f,
             UnityAction onForwardCompleted = null,
             UnityAction onRoutineFinished = null) => PingPongRoutine(
+                durationSec,
                 onProgress,
-                AnimationCurve.Linear(0, startValue, durationSec, endValue),
-                AnimationCurve.Linear(0f, endValue, durationSec, startValue),
-                onForwardCompleted,
+                startValue,
+                endValue,
+                onForwardCompleted?.ToRoutine(),
                 onRoutineFinished
             );
         
+        
+        public static Coroutine StartPingPongRoutine(
+            this MonoBehaviour mb,
+            float durationSec,
+            UnityAction<bool, float> onProgress,
+            float startValue = 0f,
+            float endValue = 1f,
+            IEnumerator onForwardCompletedRoutine = null,
+            UnityAction onRoutineFinished = null)
+            {
+                return mb.StartCoroutine(
+                    PingPongRoutine(
+                        onProgress,
+                        AnimationCurve.Linear(0, startValue, durationSec, endValue),
+                        AnimationCurve.Linear(0f, endValue, durationSec, startValue),
+                        onForwardCompletedRoutine,
+                        onRoutineFinished
+                    )
+                );
+            }
+
         public static Coroutine StartPingPongRoutine(
             this MonoBehaviour mb,
             float durationSec,
@@ -410,10 +531,11 @@ namespace ChobiLib.Unity
             float endValue = 1f,
             UnityAction onForwardCompleted = null,
             UnityAction onRoutineFinished = null) => mb.StartPingPongRoutine(
+                durationSec,
                 onProgress,
-                AnimationCurve.Linear(0, startValue, durationSec, endValue),
-                AnimationCurve.Linear(0f, endValue, durationSec, startValue),
-                onForwardCompleted,
+                startValue,
+                endValue,
+                onForwardCompleted?.ToRoutine(),
                 onRoutineFinished
             );
         //<---
