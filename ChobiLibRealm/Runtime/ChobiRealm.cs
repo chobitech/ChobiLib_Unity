@@ -94,7 +94,7 @@ namespace ChobiLib.Unity.Realm
 
         public string GetRealmFileFullPath() => GetRealmFileFullPath(realmFileName);
 
-        public string GetRealmFileFullPath(string fileName) => (process != this) ? process.GetRealmFileFullPath(fileName) : Path.Join(Application.persistentDataPath, fileName);
+        public virtual string GetRealmFileFullPath(string fileName) => (process != this) ? process.GetRealmFileFullPath(fileName) : Path.Join(Application.persistentDataPath, fileName);
 
         public RealmConfiguration CreateConfiguration()
         {
