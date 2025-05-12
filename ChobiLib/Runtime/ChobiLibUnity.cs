@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -9,6 +10,18 @@ namespace ChobiLib.Unity
 {
     public static class ChobiLibUnity
     {
+        public static string GetPathInPersistentDataPath(string fileName, IEnumerable<string> subDirs = null, bool withCreating = true)
+        {
+            string dirPath = (subDirs != null) ? Path.Join(Application.persistentDataPath, subDirs.JoinToString("/")) : Application.persistentDataPath;
+            if (withCreating)
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            return Path.Join(dirPath, fileName);
+        }
+
+
+
         //---> 2025/04/05 added
         public static string GetCrossPlatformSavedataPath(string dataDirName = "savedata")
         {
