@@ -26,6 +26,11 @@ public class RendererHoldingMonoBehaviour : SelfObjectHoldingMonoBehaviour
 
         PropertyBlock = new();
 
+        if (renderer == null)
+        {
+            renderer = GetComponent<Renderer>();
+        }
+
         if (renderer != null)
         {
             material = renderer.material;
