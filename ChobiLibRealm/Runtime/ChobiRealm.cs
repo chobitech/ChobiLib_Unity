@@ -3,12 +3,10 @@ namespace ChobiLib.Unity.Realm
     using System;
     using System.IO;
     using Realms;
-    using Realms.Schema;
     using System.Security.Cryptography;
-    using UnityEngine;
     using UnityEngine.Events;
 
-    public class ChobiRealm : ChobiRealm.IChobiRealmProcess
+    public class ChobiRealm
     {
         public const int RealmEncryptionKeyBytes = 64;
 
@@ -51,6 +49,8 @@ namespace ChobiLib.Unity.Realm
 
         public interface IChobiRealmProcess : IDisposable
         {
+            Realm Realm { get; }
+
             string GetRealmFileFullPath(string realmFileName);
 
             RealmConfiguration CreateConfiguration();
@@ -70,11 +70,6 @@ namespace ChobiLib.Unity.Realm
 
         public readonly IChobiRealmProcess process;
 
-        public RealmConfiguration Configuration { get; private set; }
-
-        private Realm _realm;
-        public Realm Realm => _realm ??= Realm.GetInstance(Configuration);
-
         public ChobiRealm(
             string realmFileName,
             ulong schemeVersion = 1,
@@ -87,105 +82,30 @@ namespace ChobiLib.Unity.Realm
             this.schemeVersion = schemeVersion;
             this.schemeTypes = schemeTypes;
             this.encryptKey = encryptKey;
-            this.process = process ?? this;
-
-            Configuration = CreateConfiguration();
+            this.process = process ?? new DefaultChobiRealmProcess(
+                realmFileName,
+                schemeVersion,
+                schemeTypes,
+                encryptKey
+            );
         }
 
-        public string GetRealmFileFullPath() => GetRealmFileFullPath(realmFileName);
 
-        public virtual string GetRealmFileFullPath(string fileName) => (process != this) ? process.GetRealmFileFullPath(fileName) : Path.Join(Application.persistentDataPath, fileName);
+        public virtual Realm Realm => process.Realm;
 
-        public RealmConfiguration CreateConfiguration()
-        {
-            if (process != this)
-            {
-                return process.CreateConfiguration();
-            }
+        public virtual string GetRealmFileFullPath() => process.GetRealmFileFullPath(realmFileName);
 
-            var config = new RealmConfiguration(GetRealmFileFullPath())
-            {
-                SchemaVersion = schemeVersion,
-            };
+        public virtual RealmConfiguration CreateConfiguration() => process.CreateConfiguration();
 
-            if (encryptKey != null)
-            {
-                config.EncryptionKey = encryptKey;
-            }
+        public virtual T With<T>(Func<Realm, T> func) => process.With(func);
 
-            if (schemeTypes != null && schemeTypes.Length > 0)
-            {
-                var sBuilder = new RealmSchema.Builder();
-                var roType = typeof(RealmObject);
+        public virtual void With(UnityAction<Realm> action) => process.With(action);
 
-                foreach (var t in schemeTypes)
-                {
-                    if (t.IsSubclassOf(roType))
-                    {
-                        sBuilder.Add(t);
-                    }
-                }
+        public virtual T WithTransaction<T>(Func<Realm, T> func) => process.WithTransaction(func);
+        public virtual void WithTransaction(UnityAction<Realm> action) => process.WithTransaction(action);
 
-                if (sBuilder.Count > 0)
-                {
-                    config.Schema = sBuilder.Build();
-                }
-            }
-
-            return config;
-        }
-
-        public T With<T>(Func<Realm, T> func) => (process != this) ? process.With(func) : func(Realm);
-
-        public void With(UnityAction<Realm> action)
-        {
-            if (process != this)
-            {
-                process.With(action);
-            }
-            else
-            {
-                action(Realm);
-            }
-        }
-
-        public T WithTransaction<T>(Func<Realm, T> func) => (process != this) ? process.WithTransaction(func) : Realm.WithTransaction(func);
-        public void WithTransaction(UnityAction<Realm> action)
-        {
-            if (process != this)
-            {
-                process.WithTransaction(action);
-            }
-            else
-            {
-                Realm.WithTransaction(action);
-            }
-        }
-
-        public void Dispose()
-        {
-            if (process != this)
-            {
-                process.Dispose();
-                return;
-            }
-
-            _realm?.Dispose();
-            _realm = null;
-        }
-
-        public void DeleteAllRealm()
-        {            
-            if (process != this)
-            {
-                process.DeleteAllRealm();
-                return;
-            }
-
-            Dispose();
-            Realm.DeleteRealm(Configuration);
-        }
-
+        public virtual void Dispose() => process.Dispose();
+        public virtual void DeleteAllRealm() => process.DeleteAllRealm();
     }
 
 }
