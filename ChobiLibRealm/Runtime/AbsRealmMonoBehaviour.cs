@@ -11,7 +11,7 @@ namespace ChobiLib.Unity.Realm
         public delegate void OnAppQuitEventHandler(Realm realm);
         public event OnAppQuitEventHandler OnAppQuit;
 
-        public abstract string RealmFileName { get; }
+        public virtual string RealmFileName { get; }
         public virtual ulong SchemeVersion => 1;
         public virtual Type[] SchemeTypes => null;
         public virtual byte[] EncryptKey => null;

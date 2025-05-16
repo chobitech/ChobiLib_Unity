@@ -1,6 +1,6 @@
 {
     "name": "com.chobitech.unity.realm",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "displayName": "ChobiLibRealm",
     "description": "unity library for personal use",
     "unity": "2022.3",
