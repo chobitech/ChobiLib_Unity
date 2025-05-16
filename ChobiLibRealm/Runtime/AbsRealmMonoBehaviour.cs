@@ -20,7 +20,7 @@ namespace ChobiLib.Unity.Realm
         private ChobiRealm _chobiRealm;
         public virtual ChobiRealm ChobiRealm => _chobiRealm ??= new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
 
-        public RealmConfiguration Configuration => ChobiRealm.Configuration;
+        public RealmConfiguration Configuration => ChobiRealm.CreateConfiguration();
 
         public T With<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
         public void With(UnityAction<Realm> action) => ChobiRealm.With(action);
