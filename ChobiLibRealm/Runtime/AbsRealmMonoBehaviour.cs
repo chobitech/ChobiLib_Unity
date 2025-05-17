@@ -17,8 +17,11 @@ namespace ChobiLib.Unity.Realm
         public virtual byte[] EncryptKey => null;
         public virtual ChobiRealm.IChobiRealmProcess ChobiRealmProcess => null;
 
+
+        protected virtual ChobiRealm ChobiRealmCreator() => new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
+
         private ChobiRealm _chobiRealm;
-        public virtual ChobiRealm ChobiRealm => _chobiRealm ??= new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
+        public virtual ChobiRealm ChobiRealm => _chobiRealm ??= ChobiRealmCreator();
 
         public RealmConfiguration Configuration => ChobiRealm.CreateConfiguration();
 
