@@ -55,5 +55,19 @@ namespace ChobiLib.Unity
             var pos = tr.position;
             tr.position = pos + new Vector3(dx, dy, dz);
         }
+
+        public static void SetLocalScale(
+            this Transform tr,
+            float? scaleX = null,
+            float? scaleY = null,
+            float? scaleZ = null)
+        {
+            var scale = tr.localScale;
+            tr.localScale = new(
+                scaleX ?? scale.x,
+                scaleY ?? scale.y,
+                scaleZ ?? scale.z
+            );
+        }
     }
 }

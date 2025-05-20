@@ -2,6 +2,7 @@ using System.Collections;
 using System.Security.Cryptography;
 using ChobiLib;
 using ChobiLib.Unity;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
@@ -11,22 +12,27 @@ public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
         yield break;
     }
 
-    // Start is called before the first frame update
+
+    public Transform testCube;
+
     void Start()
     {
-        var curve = AnimationCurve.Linear(0, 1, 5, 3.6f);
+        IEnumerator testRotate()
+        {
+            var degree = 0f;
 
-        Debug.Log(curve.Evaluate(0));
-        Debug.Log(curve.Evaluate(0.5f));
-        Debug.Log(curve.Evaluate(1f));
+            var point = new Vector3(1, 1, 1);
+            var axis = new Vector3(0.5f, 0.5f, -0.5f);
 
-        Debug.Log(curve.Evaluate(5f));
-        Debug.Log(curve.Evaluate(-1f));
-    }
+            while (true)
+            {
+                degree += 1f;
+                degree %= 360f;
+                testCube.RotateAround(point, axis, 1f);
+                yield return null;
+            }
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        StartCoroutine(testRotate());
     }
 }
