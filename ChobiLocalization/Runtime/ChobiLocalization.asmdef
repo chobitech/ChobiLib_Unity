@@ -2,7 +2,6 @@
 	"name": "ChobiLocalization",
 	"references": [
 		"ChobiLib.Unity",
-		"UnityEngine.Localization",
-		"UnityEditor.AddressableAssets"
+		"UnityEngine.Localization"
 	]
 }
