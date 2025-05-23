@@ -6,6 +6,16 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.chobitech.unity.localization": {
+      "version": "file:./../ChobiLocalization",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.chobitech.unity": "0.3.*",
+        "com.unity.addressables": "2.4.*",
+        "com.unity.localization": "1.5.*"
+      }
+    },
     "com.chobitech.unity.realm": {
       "version": "file:./../ChobiLibRealm",
       "depth": 0,
@@ -82,6 +92,16 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.localization": {
+      "version": "1.5.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.addressables": "1.22.2",
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.mobile.android-logcat": {
       "version": "1.4.4",
       "depth": 1,
@@ -105,6 +125,13 @@
       "dependencies": {
         "com.unity.modules.uielements": "1.0.0"
       }
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
     },
     "com.unity.profiling.core": {
       "version": "1.0.2",

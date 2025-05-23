@@ -2,11 +2,13 @@
   "dependencies": {
     "com.chobitech.unity": "file:./../ChobiLib",
     "com.chobitech.unity.realm": "file:./../ChobiLibRealm",
+    "com.chobitech.unity.localization": "file:./../ChobiLocalization",
     "com.unity.addressables": "2.4.6",
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.mobile": "1.0.0",
     "com.unity.ide.rider": "3.0.36",
     "com.unity.ide.visualstudio": "2.0.23",
+    "com.unity.localization": "1.5.4",
     "com.unity.multiplayer.center": "1.0.0",
     "com.unity.test-framework": "1.5.1",
     "com.unity.timeline": "1.8.8",
