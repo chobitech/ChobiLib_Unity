@@ -1,6 +1,6 @@
-/*
 using System.IO;
 using UnityEditor;
+using UnityEngine.AdaptivePerformance.VisualScripting;
 
 namespace ChobiLib.Unity.Localization
 {
@@ -33,6 +33,11 @@ namespace ChobiLib.Unity.Localization
 
                 foreach (var fInfo in srcDi.GetFiles())
                 {
+                    if (fInfo.Name.EndsWith(".meta"))
+                    {
+                        continue;
+                    }
+                    
                     string destPath = Path.Combine(destDi.FullName, fInfo.Name);
                     if (!File.Exists(destPath))
                     {
@@ -44,4 +49,3 @@ namespace ChobiLib.Unity.Localization
 
     }
 }
-*/
