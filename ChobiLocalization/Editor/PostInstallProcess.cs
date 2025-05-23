@@ -1,6 +1,7 @@
 using System.IO;
+using System.Linq;
 using UnityEditor;
-using UnityEngine.AdaptivePerformance.VisualScripting;
+using UnityEditor.PackageManager;
 
 namespace ChobiLib.Unity.Localization
 {
@@ -15,7 +16,19 @@ namespace ChobiLib.Unity.Localization
             {
                 SessionState.SetBool(markerKey, true);
 
-                string sourceDirPath = "Packages/com.chobitech.unity.localization/Templates";
+                string locPackageName = "ChobiLocalization";
+                var listRequest = Client.List();
+
+                while (!listRequest.IsCompleted) { }
+
+                var pInfo = listRequest.Result.FirstOrDefault(p => p.name == locPackageName);
+
+                if (pInfo == null)
+                {
+                    return;
+                }
+
+                string sourceDirPath = pInfo.resolvedPath;
                 string destDirPath = "Assets/ChobiLocalization";
 
                 var srcDi = new DirectoryInfo(sourceDirPath);

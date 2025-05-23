@@ -1,6 +1,6 @@
 {
     "name": "com.chobitech.unity.localization",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "displayName": "ChobiLocalization",
     "description": "unity library for personal use",
     "unity": "2022.3",
