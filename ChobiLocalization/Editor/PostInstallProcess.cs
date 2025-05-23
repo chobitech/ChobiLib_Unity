@@ -1,3 +1,4 @@
+/*
 using System.IO;
 using UnityEditor;
 
@@ -43,3 +44,4 @@ namespace ChobiLib.Unity.Localization
 
     }
 }
+*/
