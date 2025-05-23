@@ -22,5 +22,8 @@ namespace ChobiLib.Unity
             SelfRectTransform = GetComponent<RectTransform>();
             SelfGameObject = gameObject;
         }
+
+
+        public T FindAndGetComponentInChildren<T>(string childName) where T : Object => SelfTransform.FindAndGetComponent<T>(childName);
     }
 }

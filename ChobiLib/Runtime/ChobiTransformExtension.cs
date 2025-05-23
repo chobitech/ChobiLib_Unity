@@ -69,5 +69,16 @@ namespace ChobiLib.Unity
                 scaleZ ?? scale.z
             );
         }
+
+
+        public static T FindAndGetComponent<T>(this Transform tr, string name) where T : Object
+        {
+            var child = tr.Find(name);
+            if (child != null)
+            {
+                return child.GetComponent<T>();
+            }
+            return null;
+        }
     }
 }
