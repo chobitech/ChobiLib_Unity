@@ -72,5 +72,41 @@ namespace ChobiLib.Unity
             var alpha = addAlpha ? color.a.ToHex() : "";
             return $"#{alpha}{color.r.ToHex()}{color.g.ToHex()}{color.b.ToHex()}";
         }
+
+
+        public static Color AddToRgba(this Color color, float r, float g, float b, float a)
+        {
+            return new(
+                color.r + r,
+                color.g + g,
+                color.b + b,
+                color.a + a
+            );
+        }
+        public static Color AddToRgb(this Color color, float r, float g, float b) => color.AddToRgba(r, g, b, 0);
+        public static Color AddToAll(this Color color, float value, bool alsoAlpha = false) => color.AddToRgba(value, value, value, alsoAlpha ? value : 0);
+
+        public static Color AddToRgba(this Color color, int r, int g, int b, int a) => color.AddToRgba(r.ToColorFloat(), g.ToColorFloat(), b.ToColorFloat(), a.ToColorFloat());
+        public static Color AddToRgb(this Color color, int r, int g, int b) => color.AddToRgba(r, g, b, 0);
+        public static Color AddToAll(this Color color, int value, bool alsoAlpha = false) => color.AddToAll(value.ToColorFloat(), alsoAlpha);
+
+        public static Color CopyWith(this Color color, float? r = null, float? g = null, float? b = null, float? a = null)
+        {
+            return new(
+                r ?? color.r,
+                g ?? color.g,
+                b ?? color.b,
+                a ?? color.a
+            );
+        }
+        public static Color CopyWith(this Color color, int? r = null, int? g = null, int? b = null, int? a = null)
+        {
+            return color.CopyWith(
+                r?.ToColorFloat(),
+                g?.ToColorFloat(),
+                b?.ToColorFloat(),
+                a?.ToColorFloat()
+            );
+        }
     }
 }

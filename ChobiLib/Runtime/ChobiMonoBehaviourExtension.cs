@@ -104,5 +104,16 @@ namespace ChobiLib.Unity
             onForwardCompleted?.ToRoutine(),
             onPingPongCompleted
         );
+
+
+
+        public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, WaitForSeconds waitForSeconds, IEnumerator routine)
+        {
+            return mb.StartCoroutine(DelayRoutine.RunAfterDelay(waitForSeconds, routine));
+        }
+        public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, float waitSeconds, IEnumerator routine) => mb.DelayStartCoroutine(new WaitForSeconds(waitSeconds), routine);
+        public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, WaitForSeconds waitForSeconds, UnityAction action) => mb.DelayStartCoroutine(waitForSeconds, action.ToRoutine());
+        public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, float waitSeconds, UnityAction action) => mb.DelayStartCoroutine(new WaitForSeconds(waitSeconds), action);
+
     }
 }
