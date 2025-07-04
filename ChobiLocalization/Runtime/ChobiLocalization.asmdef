@@ -1,7 +1,0 @@
-{
-	"name": "ChobiLocalization",
-	"references": [
-		"ChobiLib.Unity",
-		"UnityEngine.Localization"
-	]
-}

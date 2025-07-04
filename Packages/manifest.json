@@ -2,7 +2,7 @@
   "dependencies": {
     "com.chobitech.unity": "file:./../ChobiLib",
     "com.chobitech.unity.realm": "file:./../ChobiLibRealm",
-    "com.chobitech.unity.localization": "file:./../ChobiLocalization",
+    "com.chobitech.unity.addressables": "file:./../ChobiLibAddressables",
     "com.unity.addressables": "2.4.6",
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.mobile": "1.0.0",

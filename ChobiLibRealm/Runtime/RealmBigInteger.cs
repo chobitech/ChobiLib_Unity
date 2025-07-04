@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Security.Cryptography;
 using MongoDB.Bson;
 using Realms;
 
@@ -38,5 +39,51 @@ namespace ChobiLib.Unity.Realm
                 }
             }
         }
+
+        public static implicit operator BigInteger(RealmBigInteger rbi) => rbi.BigInteger;
+
+        public static RealmBigInteger operator -(RealmBigInteger rbi)
+        {
+            rbi.BigInteger = -rbi.BigInteger;
+            return rbi;
+        }
+
+        public static RealmBigInteger operator +(RealmBigInteger rbi, BigInteger bi)
+        {
+            rbi.BigInteger += bi;
+            return rbi;
+        }
+
+        public static RealmBigInteger operator -(RealmBigInteger rbi, BigInteger bi)
+        {
+            rbi.BigInteger -= bi;
+            return rbi;
+        }
+
+
+        public static RealmBigInteger operator *(RealmBigInteger rbi, BigInteger bi)
+        {
+            rbi.BigInteger *= bi;
+            return rbi;
+        }
+
+        public static RealmBigInteger operator /(RealmBigInteger rbi, BigInteger bi)
+        {
+            rbi.BigInteger /= bi;
+            return rbi;
+        }
+
+        public static RealmBigInteger operator ++(RealmBigInteger rbi)
+        {
+            rbi.BigInteger++;
+            return rbi;
+        }
+
+        public static RealmBigInteger operator --(RealmBigInteger rbi)
+        {
+            rbi.BigInteger--;
+            return rbi;
+        }
+
     }
 }

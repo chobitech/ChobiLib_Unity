@@ -1,0 +1,8 @@
+{
+	"name": "ChobiLibAddressables",
+	"references": [
+		"ChobiLibUnity",
+		"Unity.Addressables",
+		"Unity.ResourceManager"
+	]
+}

@@ -6,13 +6,13 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.chobitech.unity.localization": {
-      "version": "file:./../ChobiLocalization",
+    "com.chobitech.unity.addressables": {
+      "version": "file:./../ChobiLibAddressables",
       "depth": 0,
       "source": "local",
       "dependencies": {
         "com.chobitech.unity": "0.3.*",
-        "com.unity.localization": "1.5.*"
+        "com.unity.addressables": "2.4.*"
       }
     },
     "com.chobitech.unity.realm": {
