@@ -56,8 +56,10 @@ namespace ChobiLib.Unity.Realm
 
         public RealmConfiguration Configuration => ChobiRealm.CreateConfiguration();
 
+        /*
         public T With<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
         public void With(UnityAction<Realm> action) => ChobiRealm.With(action);
+        */
 
         public void WithAsync<T>(Func<Realm, T> func, UnityAction<T> onFinished = null)
         {
@@ -82,6 +84,7 @@ namespace ChobiLib.Unity.Realm
             });
         }
 
+        
         public T WithTransaction<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
         public void WithTransaction(UnityAction<Realm> action) => ChobiRealm.WithTransaction(action);
 
@@ -151,10 +154,19 @@ namespace ChobiLib.Unity.Realm
 
         protected virtual void OnApplicationQuit()
         {
-            WithTransaction(r =>
+            _mutex.Wait();
+
+            try
             {
-                OnAppQuit?.Invoke(r);
-            });
+                WithTransaction(r =>
+                {
+                    OnAppQuit?.Invoke(r);
+                });
+            }
+            finally
+            {
+                _mutex.Release();
+            }
         }
 
         protected virtual void OnDestroy()
