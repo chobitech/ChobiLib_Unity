@@ -19,7 +19,35 @@ namespace ChobiLib.Unity.Realm
         public virtual byte[] EncryptKey => null;
         public virtual ChobiRealm.IChobiRealmProcess ChobiRealmProcess => null;
 
+
+        //--- for async
         private SynchronizationContext _mainThreadContext;
+        private readonly SemaphoreSlim _mutex = new(1, 1);
+        private async Task MutexProcess<T>(Func<Realm, Task<T>> proc, UnityAction<T> onFinished)
+        {
+            await _mutex.WaitAsync();
+            
+            T result;
+
+            try
+            {
+                result = await proc(ChobiRealm.Realm);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                _mutex.Release();
+            }
+
+            if (onFinished != null)
+            {
+                _mainThreadContext?.Post(_ => onFinished(result), null);
+            }
+        }
+
 
         protected virtual ChobiRealm ChobiRealmCreator() => new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
 
@@ -33,65 +61,73 @@ namespace ChobiLib.Unity.Realm
 
         public void WithAsync<T>(Func<Realm, T> func, UnityAction<T> onFinished = null)
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                lock (ChobiRealm)
-                {
-                    var result = func(ChobiRealm.Realm);
-                    if (onFinished != null)
-                    {
-                        _mainThreadContext?.Post(_ => onFinished(result), null);
-                    }
-                }
+                await MutexProcess(r => Task.Run(async () => func(ChobiRealm.Realm)), onFinished);
             });
         }
 
         public void WithAsync(UnityAction<Realm> action, UnityAction onFinished = null)
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                lock (ChobiRealm)
+                await MutexProcess<object>(
+                r =>
                 {
-                    action(ChobiRealm.Realm);
-                    if (onFinished != null)
-                    {
-                        _mainThreadContext?.Post(_ => onFinished(), null);
-                    }
-                }
+                    action(r);
+                    return null;
+                },
+                (onFinished != null) ? _ => onFinished() : null
+                );
             });
         }
 
         public T WithTransaction<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
         public void WithTransaction(UnityAction<Realm> action) => ChobiRealm.WithTransaction(action);
 
-        public void WithTransactionAsync<T>(Func<Realm, T> func, UnityAction<T> onFinished = null)
+        private async Task InnerWithTransactionAsync<T>(Func<Realm, Task<T>> func, UnityAction<T> onFinished)
         {
-            Task.Run(() =>
-            {
-                lock (ChobiRealm)
+            await MutexProcess<T>(
+                async r =>
                 {
-                    var result = WithTransaction(func);
-                    if (onFinished != null)
+                    if (r.IsInTransaction)
                     {
-                        _mainThreadContext?.Post(_ => onFinished(result), null);
+                        return await func(r);
                     }
-                }
-            });
+
+                    using var tr = await r.BeginWriteAsync();
+
+                    try
+                    {
+                        var result = await func(r);
+                        await tr.CommitAsync();
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        tr.Rollback();
+                        throw ex;
+                    }
+                },
+                onFinished
+            );
+        }
+
+        public async void WithTransactionAsync<T>(Func<Realm, Task<T>> func, UnityAction<T> onFinished = null)
+        {
+            await InnerWithTransactionAsync(func, onFinished);
         }
         
-        public void WithTransactionAsync(UnityAction<Realm> action, UnityAction onFinished = null)
+        public async void WithTransactionAsync(Func<Realm, Task> action, UnityAction onFinished = null)
         {
-            Task.Run(() =>
-            {
-                lock (ChobiRealm)
+            await InnerWithTransactionAsync<object>(
+                async r =>
                 {
-                    WithTransaction(action);
-                    if (onFinished != null)
-                    {
-                        _mainThreadContext?.Post(_ => onFinished(), null);
-                    }
-                }
-            });
+                    await action(r);
+                    return null;
+                },
+                (onFinished != null) ? _ => onFinished() : null
+            );
         }
 
 
