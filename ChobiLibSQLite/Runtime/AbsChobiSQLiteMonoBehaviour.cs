@@ -17,6 +17,8 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
 
     private SynchronizationContext _mainContext;
 
+    public UnityAction<SQLiteConnection> onAppQuit;
+
 
     public abstract void OnCreate(SQLiteConnection con);
 
@@ -100,5 +102,12 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
             await Db.WithTransactionAsync(asyncAction);
             RunOnMainThread(onFinished);
         });
+    }
+
+    protected virtual void OnApplicationQuit()
+    {
+        WithTransaction(db => onAppQuit?.Invoke(db));
+        _db?.Dispose();
+        _db = null;
     }
 }
