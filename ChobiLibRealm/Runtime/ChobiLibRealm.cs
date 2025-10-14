@@ -4,7 +4,6 @@ namespace ChobiLib.Unity.Realm
 {
     using System;
     using System.Collections;
-    using System.Net.Mail;
     using System.Threading.Tasks;
     using Realms;
     using UnityEngine.Events;
@@ -36,6 +35,7 @@ namespace ChobiLib.Unity.Realm
             }
         }
 
+        
         public static void WithTransaction(this Realm realm, UnityAction<Realm> action) => realm.WithTransaction<object>(r =>
         {
             action(r);

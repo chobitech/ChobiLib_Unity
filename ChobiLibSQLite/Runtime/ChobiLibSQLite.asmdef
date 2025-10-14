@@ -1,0 +1,7 @@
+{
+	"name": "ChobiLibSQLite",
+	"references": [
+		"ChobiLibUnity",
+		"Gilzoide.SqliteNet"
+	]
+}

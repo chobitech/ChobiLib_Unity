@@ -3,6 +3,8 @@
     "com.chobitech.unity": "file:./../ChobiLib",
     "com.chobitech.unity.addressables": "file:./../ChobiLibAddressables",
     "com.chobitech.unity.realm": "file:./../ChobiLibRealm",
+    "com.chobitech.unity.sqlite": "file:./../ChobiLibSQLite",
+    "com.gilzoide.sqlite-net": "https://github.com/gilzoide/unity-sqlite-net.git#1.3.2",
     "com.unity.addressables": "2.7.3",
     "com.unity.collab-proxy": "2.9.3",
     "com.unity.feature.mobile": "1.0.0",
