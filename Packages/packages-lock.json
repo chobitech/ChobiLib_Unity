@@ -21,7 +21,7 @@
       "source": "local",
       "dependencies": {
         "com.chobitech.unity": ">=0.3.7",
-        "io.realm.unity": "20.*"
+        "io.realm.unity": "20.1.*"
       }
     },
     "com.unity.adaptiveperformance": {

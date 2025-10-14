@@ -53,7 +53,7 @@ namespace ChobiLib.Unity.Realm
 
         public virtual ChobiRealm ChobiRealm => _chobiRealm ??= ChobiRealmCreator();
 
-        private readonly AsyncLock _lock;
+        private readonly AsyncLock _lock = new();
 
         public RealmConfiguration Configuration => ChobiRealm.CreateConfiguration();
 
