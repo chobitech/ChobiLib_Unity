@@ -4,6 +4,8 @@ namespace ChobiLib.Unity.Realm
 {
     using System;
     using System.Collections;
+    using System.Net.Mail;
+    using System.Threading.Tasks;
     using Realms;
     using UnityEngine.Events;
 
@@ -41,7 +43,41 @@ namespace ChobiLib.Unity.Realm
         });
 
 
-        public static void RemoveCascade<T>(this Realm realm, T data) where T : RealmObject => realm.WithTransaction(r =>
+        public static async Task<T> WithTransactionAsync<T>(this Realm realm, Func<Realm, Task<T>> asyncFunc)
+        {
+            if (realm.IsInTransaction)
+            {
+                return await asyncFunc(realm);
+            }
+
+            var tr = await realm.BeginWriteAsync();
+
+            try
+            {
+                var result = await asyncFunc(realm);
+                await tr.CommitAsync();
+                return result;
+            }
+            catch
+            {
+                tr.Rollback();
+                throw;
+            }
+        }
+
+        public static async Task WithTransactionAsync(this Realm realm, Func<Realm, Task> asyncAction)
+        {
+            await realm.WithTransactionAsync<object>(
+                async r =>
+                {
+                    await asyncAction(r);
+                    return null;
+                }
+            );
+        }
+
+
+        public static void RemoveCascade<T>(this Realm realm, T data) where T : IRealmObject => realm.WithTransaction(r =>
         {
             var tType = typeof(T);
             var props = tType.GetProperties();
@@ -55,7 +91,7 @@ namespace ChobiLib.Unity.Realm
 
                 var value = p.GetValue(data);
 
-                if (value is RealmObject rObj)
+                if (value is IRealmObject rObj)
                 {
                     r.RemoveCascade(rObj);
                 }
@@ -63,7 +99,7 @@ namespace ChobiLib.Unity.Realm
                 {
                     foreach (var v in list)
                     {
-                        if (v is RealmObject ro)
+                        if (v is IRealmObject ro)
                         {
                             r.RemoveCascade(ro);
                         }

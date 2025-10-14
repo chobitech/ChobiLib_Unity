@@ -5,6 +5,8 @@ namespace ChobiLib.Unity.Realm
     using Realms;
     using System.Security.Cryptography;
     using UnityEngine.Events;
+    using System.Threading.Tasks;
+    using UnityEngine.Video;
 
     public class ChobiRealm
     {
@@ -14,7 +16,8 @@ namespace ChobiLib.Unity.Realm
         {
             byte[] data = null;
 
-            try {
+            try
+            {
                 if (File.Exists(filePath))
                 {
                     data = File.ReadAllBytes(filePath);
@@ -28,7 +31,7 @@ namespace ChobiLib.Unity.Realm
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 data = null;
             }
@@ -58,9 +61,28 @@ namespace ChobiLib.Unity.Realm
             void With(UnityAction<Realm> action);
 
             T WithTransaction<T>(Func<Realm, T> func);
-            void WithTransaction(UnityAction<Realm> action);
+
+            Task<T> WithTransactionAsync<T>(Func<Realm, Task<T>> asyncFunc);
 
             void DeleteAllRealm();
+
+
+            public virtual void WithTransaction(UnityAction<Realm> action) => WithTransaction<object>(r =>
+            {
+                action(r);
+                return null;
+            });
+
+            public async virtual Task WithTransactionAsync(Func<Realm, Task> asyncAction)
+            {
+                await WithTransactionAsync<object>(
+                    async r =>
+                    {
+                        await asyncAction(r);
+                        return null;
+                    }
+                );
+            }
         }
 
         public readonly string realmFileName;
@@ -102,7 +124,17 @@ namespace ChobiLib.Unity.Realm
         public virtual void With(UnityAction<Realm> action) => process.With(action);
 
         public virtual T WithTransaction<T>(Func<Realm, T> func) => process.WithTransaction(func);
-        public virtual void WithTransaction(UnityAction<Realm> action) => process.WithTransaction(action);
+        public void WithTransaction(UnityAction<Realm> action) => process.WithTransaction(action);
+
+        public async virtual Task<T> WithTransactionAsync<T>(Func<Realm, Task<T>> asyncFunc)
+        {
+            return await process.WithTransactionAsync(asyncFunc);
+        }
+
+        public async Task WithTransactionAsync(Func<Realm, Task> asyncAction)
+        {
+            await process.WithTransactionAsync(asyncAction);
+        }
 
         public virtual void Dispose() => process.Dispose();
         public virtual void DeleteAllRealm() => process.DeleteAllRealm();

@@ -4,7 +4,7 @@ namespace ChobiLib.Unity.Realm
     using MongoDB.Bson;
     using Realms;
 
-    public class RealmVector4 : RealmObject
+    public partial class RealmVector4 : IRealmObject
     {
         public static RealmVector4 CreateNew(Vector4? vector4 = null) => new()
         {

@@ -4,7 +4,7 @@ namespace ChobiLib.Unity.Realm
     using UnityEngine;
     using Realms;
 
-    public class RealmColor : RealmObject
+    public partial class RealmColor : IRealmObject
     {
         public static RealmColor CreateNew(Color? color = null) => new()
         {

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ChobiLib.Unity.Realm
 {
-    public class RealmJsonableData : RealmObject
+    public partial class RealmJsonableData : IRealmObject
     {
         [PrimaryKey]
         public ObjectId Id { get; set; }

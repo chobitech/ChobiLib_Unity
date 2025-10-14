@@ -2,6 +2,7 @@ namespace ChobiLib.Unity.Realm
 {
     using System;
     using System.IO;
+    using System.Threading.Tasks;
     using Realms;
     using Realms.Schema;
     using UnityEngine;
@@ -44,7 +45,7 @@ namespace ChobiLib.Unity.Realm
                 if (SchemeTypes != null && SchemeTypes.Length > 0)
                 {
                     var sBuilder = new RealmSchema.Builder();
-                    var roType = typeof(RealmObject);
+                    var roType = typeof(IRealmObject);
 
                     foreach (var t in SchemeTypes)
                     {
@@ -84,6 +85,10 @@ namespace ChobiLib.Unity.Realm
         public void With(UnityAction<Realm> action) => action(Realm);
 
         public T WithTransaction<T>(Func<Realm, T> func) => Realm.WithTransaction(func);
-        public void WithTransaction(UnityAction<Realm> action) => Realm.WithTransaction(action);
+
+        public async Task<T> WithTransactionAsync<T>(Func<Realm, Task<T>> asyncFunc)
+        {
+            return await Realm.WithTransactionAsync(asyncFunc);
+        }
     }
 }

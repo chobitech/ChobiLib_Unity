@@ -20,7 +20,7 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.chobitech.unity": "0.3.*",
+        "com.chobitech.unity": ">=0.3.7",
         "io.realm.unity": "20.*"
       }
     },

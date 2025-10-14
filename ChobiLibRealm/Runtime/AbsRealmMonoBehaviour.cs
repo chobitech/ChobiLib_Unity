@@ -20,72 +20,142 @@ namespace ChobiLib.Unity.Realm
         public virtual ChobiRealm.IChobiRealmProcess ChobiRealmProcess => null;
 
 
+        public virtual int SyncWaitTimeoutMs => 250;
+        public virtual int AsyncWaitTimeoutMs => 1000;
+
+
         //--- for async
         private SynchronizationContext _mainThreadContext;
-        private readonly SemaphoreSlim _mutex = new(1, 1);
+
+        //private readonly AsyncLock _lock = new();
+
+        /*
         private async Task MutexProcess<T>(Func<Realm, Task<T>> proc, UnityAction<T> onFinished)
         {
-            await _mutex.WaitAsync();
-            
-            T result;
+            using (await _lock.LockAsync())
+            {
+                var result = await proc(ChobiRealm.Realm);
 
-            try
-            {
-                result = await proc(ChobiRealm.Realm);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                _mutex.Release();
-            }
-
-            if (onFinished != null)
-            {
-                _mainThreadContext?.Post(_ => onFinished(result), null);
+                if (onFinished != null)
+                {
+                    _mainThreadContext?.Post(_ => onFinished(result), null);
+                }
             }
         }
+        */
 
 
         protected virtual ChobiRealm ChobiRealmCreator() => new(RealmFileName, SchemeVersion, SchemeTypes, EncryptKey, ChobiRealmProcess);
 
         private ChobiRealm _chobiRealm;
+
+        //private readonly AsyncableObjectLocker<object> _locker = new(new());
+
         public virtual ChobiRealm ChobiRealm => _chobiRealm ??= ChobiRealmCreator();
+
+        private readonly AsyncLock _lock;
 
         public RealmConfiguration Configuration => ChobiRealm.CreateConfiguration();
 
-        /*
-        public T With<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
-        public void With(UnityAction<Realm> action) => ChobiRealm.With(action);
-        */
 
-        public void WithAsync<T>(Func<Realm, T> func, UnityAction<T> onFinished = null)
+        public T With<T>(Func<Realm, T> func)
         {
-            Task.Run(async () =>
+            using (_lock.Lock())
             {
-                await MutexProcess(r => Task.Run(async () => func(ChobiRealm.Realm)), onFinished);
-            });
+                return func(ChobiRealm.Realm);
+            }
         }
 
-        public void WithAsync(UnityAction<Realm> action, UnityAction onFinished = null)
+        public void With(UnityAction<Realm> action) => With<object>(r =>
+        {
+            action(r);
+            return null;
+        });
+
+        public T WithTransaction<T>(Func<Realm, T> func)
+        {
+            using (_lock.Lock())
+            {
+                return ChobiRealm.Realm.WithTransaction(func);
+            }
+        }
+
+        public void WithTransaction(UnityAction<Realm> action) => WithTransaction<object>(
+            r =>
+            {
+                action(r);
+                return null;
+            }
+        );
+
+        public void WithTransactionAsync<T>(Func<Realm, Task<T>> asyncFunc, UnityAction<T> onFinished = null)
         {
             Task.Run(async () =>
             {
-                await MutexProcess<object>(
-                r =>
+                T result;
+                using (await _lock.LockAsync())
                 {
-                    action(r);
+                    result = await ChobiRealm.Realm.WithTransactionAsync(asyncFunc);
+                }
+
+                if (onFinished != null)
+                {
+                    _mainThreadContext?.Post(_ => onFinished(result), null);
+                }
+            });
+        }
+        
+        public void WithTransactionAsync(Func<Realm, Task> asyncAction, UnityAction onFinished = null)
+        {
+            WithTransactionAsync<object>(
+                async r =>
+                {
+                    await asyncAction(r);
                     return null;
                 },
                 (onFinished != null) ? _ => onFinished() : null
-                );
+            );
+        }
+
+        /*
+        public void WithAsync<T>(Func<Realm, Task<T>> func, UnityAction<T> onFinished = null) => _locker.WithAsync(
+            async _ =>
+            {
+                return await ChobiRealm.Realm.WithTransactionAsync(func);
+            }
+        );
+        {
+            Task.Run(async () =>
+            {
+                using (await _lock.LockAsync())
+                {
+                    var result = func(ChobiRealm.Realm);
+                    if (onFinished != null)
+                    {
+                        _mainThreadContext?.Post(_ => onFinished(result), null);
+                    }
+                }
             });
         }
 
+        public void WithAsync(UnityAction<Realm> action, UnityAction onFinished = null) => WithAsync<object>(
+            r =>
+            {
+                action(r);
+                return null;
+            },
+            (onFinished != null) ? _ => onFinished() : null
+        );
+
+
+        public T WithTransaction<T>(Func<Realm, T> func)
+        {
+            using (_lock.Lock())
+            {
+                return ChobiRealm.Realm.WithTransaction(r => func(r));
+            }
+        }
         
-        public T WithTransaction<T>(Func<Realm, T> func) => ChobiRealm.WithTransaction(func);
         public void WithTransaction(UnityAction<Realm> action) => ChobiRealm.WithTransaction(action);
 
         private async Task InnerWithTransactionAsync<T>(Func<Realm, Task<T>> func, UnityAction<T> onFinished)
@@ -132,6 +202,7 @@ namespace ChobiLib.Unity.Realm
                 (onFinished != null) ? _ => onFinished() : null
             );
         }
+        */
 
 
         public string GetRealmFileFullPath() => ChobiRealm.GetRealmFileFullPath();
@@ -151,22 +222,14 @@ namespace ChobiLib.Unity.Realm
         {
             ChobiRealm.Dispose();
         }
+        
 
         protected virtual void OnApplicationQuit()
         {
-            _mutex.Wait();
-
-            try
+            WithTransaction(r =>
             {
-                WithTransaction(r =>
-                {
-                    OnAppQuit?.Invoke(r);
-                });
-            }
-            finally
-            {
-                _mutex.Release();
-            }
+                OnAppQuit?.Invoke(r);
+            });
         }
 
         protected virtual void OnDestroy()

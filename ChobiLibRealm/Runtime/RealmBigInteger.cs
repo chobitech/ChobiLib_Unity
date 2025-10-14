@@ -6,7 +6,7 @@ using Realms;
 
 namespace ChobiLib.Unity.Realm
 {
-    public class RealmBigInteger : RealmObject
+    public partial class RealmBigInteger : IRealmObject
     {
         public static RealmBigInteger CreateNew(BigInteger? bi = null) => new()
         {
