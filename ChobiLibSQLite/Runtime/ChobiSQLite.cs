@@ -11,8 +11,10 @@ namespace ChobiLib.Unity.SQLite
     {
         public interface ISQLiteInitializer
         {
-            public virtual void OnCreate(SQLiteConnection connection) { }
+            void OnCreate(SQLiteConnection connection) { }
             public virtual void OnUpgrade(SQLiteConnection con, int oldVersion, int newVersion) { }
+
+            public virtual void OnOpen(SQLiteConnection connection) { }
         }
 
         public static string GetDbPathInPersistentData(string fileName) => Path.Join(Application.persistentDataPath, fileName);
@@ -29,24 +31,40 @@ namespace ChobiLib.Unity.SQLite
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
 
+            var runOnCreate = !File.Exists(dbFilePath);
+
             using (_lock.Lock())
             {
                 _con = new SQLiteConnection(dbFilePath);
+
                 if (enableForeignKey)
                 {
                     _con.Execute("PRAGMA foreign_keys = ON;");
                 }
 
+                var isSameVersion = true;
+
                 if (initializer != null)
                 {
-                    initializer.OnCreate(_con);
-
                     var currentVer = _con.ExecuteScalar<int>("PRAGMA user_version;");
                     if (currentVer != dbVersion)
                     {
-                        initializer.OnUpgrade(_con, currentVer, dbVersion);
+                        isSameVersion = false;
                         _con.Execute($"PRAGMA user_version = {dbVersion};");
                     }
+
+                    initializer.OnOpen(_con);
+
+                    if (runOnCreate)
+                    {
+                        initializer.OnCreate(_con);
+                    }
+
+                    if (!isSameVersion)
+                    {
+                        initializer.OnUpgrade(_con, currentVer, dbVersion);
+                    }
+
                 }
             }
         }
