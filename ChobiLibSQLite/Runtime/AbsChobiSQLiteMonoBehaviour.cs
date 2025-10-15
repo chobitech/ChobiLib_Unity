@@ -20,7 +20,7 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
     public UnityAction<SQLiteConnection> onAppQuit;
 
 
-    //public abstract void OnCreate(SQLiteConnection con);
+    public abstract void OnCreate(SQLiteConnection con);
 
     private ChobiSQLite _db;
     public ChobiSQLite Db => _db ??= GenerateDb();
