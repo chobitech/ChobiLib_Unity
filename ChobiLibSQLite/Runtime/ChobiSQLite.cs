@@ -31,8 +31,6 @@ namespace ChobiLib.Unity.SQLite
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
 
-            var runOnCreate = !File.Exists(dbFilePath);
-
             using (_lock.Lock())
             {
                 _con = new SQLiteConnection(dbFilePath);
@@ -42,20 +40,24 @@ namespace ChobiLib.Unity.SQLite
                     _con.Execute("PRAGMA foreign_keys = ON;");
                 }
 
-                var isSameVersion = true;
+                
+                
+
+                var currentVer = _con.ExecuteScalar<int>("PRAGMA user_version;");
+
+                var execOnCreate = currentVer == 0;
+                var isSameVersion = currentVer == dbVersion;
+
+                if (!isSameVersion)
+                {
+                    _con.Execute($"PRAGMA user_version = {dbVersion};");
+                }
 
                 if (initializer != null)
                 {
-                    var currentVer = _con.ExecuteScalar<int>("PRAGMA user_version;");
-                    if (currentVer != dbVersion)
-                    {
-                        isSameVersion = false;
-                        _con.Execute($"PRAGMA user_version = {dbVersion};");
-                    }
-
                     initializer.OnOpen(_con);
 
-                    if (runOnCreate)
+                    if (execOnCreate)
                     {
                         initializer.OnCreate(_con);
                     }
