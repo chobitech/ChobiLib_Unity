@@ -45,6 +45,14 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
         _mainContext = SynchronizationContext.Current;
     }
 
+    public void RunOnMainThread(UnityAction action)
+    {
+        if (action != null)
+        {
+            _mainContext?.Post(_ => action?.Invoke(), null);
+        }
+    }
+
     private void RunOnMainThread<T>(T arg, UnityAction<T> action)
     {
         if (action != null)
@@ -53,13 +61,6 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
         }
     }
 
-    private void RunOnMainThread(UnityAction action)
-    {
-        if (action != null)
-        {
-            _mainContext?.Post(_ => action(), null);
-        }
-    }
 
 
     public T With<T>(Func<SQLiteConnection, T> func) => Db.With(func);
@@ -68,6 +69,7 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
     public T WithTransaction<T>(Func<SQLiteConnection, T> func) => Db.WithTransaction(func);
     public void WithTransaction(UnityAction<SQLiteConnection> action) => Db.WithTransaction(action);
 
+    /*
     public void WithAsync<T>(Func<SQLiteConnection, Task<T>> asyncFunc, UnityAction<T> onFinished = null)
     {
         Task.Run(async () =>
@@ -76,32 +78,25 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
             RunOnMainThread(result, onFinished);
         });
     }
-
-    public void WithAsync(Func<SQLiteConnection, Task> asyncAction, UnityAction onFinished = null)
+    */
+    public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
     {
-        Task.Run(async () =>
-        {
-            await Db.WithAsync(asyncAction);
-            RunOnMainThread(onFinished);
-        });
+        return await Db.WithAsync(func);
     }
 
-    public void WithTransactionAsync<T>(Func<SQLiteConnection, Task<T>> asyncFunc, UnityAction<T> onFinished = null)
+    public async Task WithAsync(UnityAction<SQLiteConnection> action)
     {
-        Task.Run(async () =>
-        {
-            var result = await Db.WithTransactionAsync(asyncFunc);
-            RunOnMainThread(result, onFinished);
-        });
+        await Db.WithAsync(action);
     }
 
-    public void WithTransactionAsync(Func<SQLiteConnection, Task> asyncAction, UnityAction onFinished = null)
+    public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, T> func)
     {
-        Task.Run(async () =>
-        {
-            await Db.WithTransactionAsync(asyncAction);
-            RunOnMainThread(onFinished);
-        });
+        return await Db.WithTransactionAsync(func);
+    }
+
+    public async Task WithTransactionAsync(UnityAction<SQLiteConnection> action)
+    {
+        await Db.WithTransactionAsync(action);
     }
 
     protected virtual void OnApplicationQuit()

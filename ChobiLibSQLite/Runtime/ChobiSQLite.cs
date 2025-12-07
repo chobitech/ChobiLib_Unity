@@ -86,23 +86,24 @@ namespace ChobiLib.Unity.SQLite
         });
 
 
-        public async Task<T> WithAsync<T>(Func<SQLiteConnection, Task<T>> asyncFunc)
+        public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
         {
             using (await _lock.LockAsync())
             {
-                return await asyncFunc(_con);
+                return await Task.Run(() =>
+                {
+                    return func(_con);
+                });
             }
         }
 
-        public async Task WithAsync(Func<SQLiteConnection, Task> asyncAction)
+        public async Task WithAsync(UnityAction<SQLiteConnection> action)
         {
-            await WithAsync<object>(
-                async r =>
-                {
-                    await asyncAction(r);
-                    return null;
-                }
-            );
+            await WithAsync<object>(db =>
+            {
+                action?.Invoke(_con);
+                return null;
+            });
         }
 
         public T WithTransaction<T>(Func<SQLiteConnection, T> func)
@@ -138,39 +139,42 @@ namespace ChobiLib.Unity.SQLite
         );
 
 
-        public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, Task<T>> asyncFunc)
+        public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, T> func)
         {
             using (await _lock.LockAsync())
             {
-                if (_con.IsInTransaction)
+                return await Task.Run(() =>
                 {
-                    return await asyncFunc(_con);
-                }
-
-                try
-                {
-                    _con.BeginTransaction();
-                    var res = await asyncFunc(_con);
-                    _con.Commit();
-                    return res;
-                }
-                catch
-                {
-                    _con.Rollback();
-                    throw;
-                }
+                    if (_con.IsInTransaction)
+                    {
+                        return func(_con);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            _con.BeginTransaction();
+                            var res = func(_con);
+                            _con.Commit();
+                            return res;
+                        }
+                        catch
+                        {
+                            _con.Rollback();
+                            throw;
+                        }
+                    }
+                });
             }
         }
 
-        public async Task WithTransactionAsync(Func<SQLiteConnection, Task> asyncAction)
+        public async Task WithTransactionAsync(UnityAction<SQLiteConnection> action)
         {
-            await WithTransactionAsync<object>(
-                async r =>
-                {
-                    await asyncAction(r);
-                    return null;
-                }
-            );
+            await WithTransactionAsync<object>(db =>
+            {
+                action?.Invoke(_con);
+                return null;
+            });
         }
         
 
