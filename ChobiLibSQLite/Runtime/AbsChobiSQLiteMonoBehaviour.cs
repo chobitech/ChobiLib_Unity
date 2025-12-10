@@ -20,7 +20,10 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
     public UnityAction<SQLiteConnection> onAppQuit;
 
 
-    public abstract void OnCreate(SQLiteConnection con);
+    public virtual void OnCreate(SQLiteConnection con)
+    {
+        
+    }
 
     private ChobiSQLite _db;
     public ChobiSQLite Db => _db ??= GenerateDb();
@@ -37,7 +40,7 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
         }
     }
 
-    private ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, EnableForeignKey, this);
+    protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, EnableForeignKey, this);
 
 
     protected virtual void Awake()
@@ -69,16 +72,6 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
     public T WithTransaction<T>(Func<SQLiteConnection, T> func) => Db.WithTransaction(func);
     public void WithTransaction(UnityAction<SQLiteConnection> action) => Db.WithTransaction(action);
 
-    /*
-    public void WithAsync<T>(Func<SQLiteConnection, Task<T>> asyncFunc, UnityAction<T> onFinished = null)
-    {
-        Task.Run(async () =>
-        {
-            var result = await Db.WithAsync(asyncFunc);
-            RunOnMainThread(result, onFinished);
-        });
-    }
-    */
     public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
     {
         return await Db.WithAsync(func);
