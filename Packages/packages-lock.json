@@ -30,15 +30,15 @@
       "source": "local",
       "dependencies": {
         "com.chobitech.unity": "https://github.com/chobitech/ChobiLib_Unity.git?path=/ChobiLib",
-        "com.gilzoide.sqlite-net": "https://github.com/gilzoide/unity-sqlite-net.git#1.3.2"
+        "com.netpyoung.sqlcipher4unity3d": "https://github.com/netpyoung/SqlCipher4Unity3D.git?path=SqlCipher4Unity3D/Assets/SqlCipher4Unity3D#1.3.5"
       }
     },
-    "com.gilzoide.sqlite-net": {
-      "version": "https://github.com/gilzoide/unity-sqlite-net.git#1.3.2",
+    "com.netpyoung.sqlcipher4unity3d": {
+      "version": "https://github.com/netpyoung/SqlCipher4Unity3D.git?path=SqlCipher4Unity3D/Assets/SqlCipher4Unity3D#1.3.5",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "08248bd5884d8eb932a837aa56d4ff456daf913f"
+      "hash": "b3873724b62a348c12ce1e5427a6d6cddf6fd1b2"
     },
     "com.unity.adaptiveperformance": {
       "version": "5.1.6",

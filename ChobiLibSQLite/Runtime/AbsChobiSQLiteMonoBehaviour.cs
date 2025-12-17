@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ChobiLib.Unity.SQLite;
-using SQLite;
+using SqlCipher4Unity3D;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,6 +12,8 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
 
     public abstract string DbFilePath { get; }
     public abstract int DbVersion { get; }
+
+    public virtual string DbPassword { get; } = null;
 
     public virtual bool EnableForeignKey => true;
 
@@ -40,7 +42,7 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
         }
     }
 
-    protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, EnableForeignKey, this);
+    protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this);
 
 
     protected virtual void Awake()

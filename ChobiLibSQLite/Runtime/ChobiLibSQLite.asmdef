@@ -2,6 +2,6 @@
 	"name": "ChobiLibSQLite",
 	"references": [
 		"ChobiLibUnity",
-		"Gilzoide.SqliteNet"
+		"SqlCipher4Unity3D"
 	]
 }

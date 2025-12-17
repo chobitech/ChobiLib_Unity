@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using System.Text;
 using ChobiLib;
 using ChobiLib.Unity;
-using ChobiLib.Unity.Security;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -39,6 +38,7 @@ public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
         StartCoroutine(testRotate());
         */
 
+        /*
         Debug.Log("=== AES test ===");
 
         var str = "test, test, test!!!";
@@ -46,6 +46,7 @@ public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
         var iv = ChobiAES.GenerateRandomBytes(16);
 
         var strBytes = Encoding.UTF8.GetBytes(str);
+        */
 
         /*
         var encData = ChobiAes256.Encrypt(Encoding.UTF8.GetBytes(str), key, iv);

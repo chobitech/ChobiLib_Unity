@@ -16,6 +16,7 @@ namespace ChobiLib.Unity
         public static string GetPathInPersistentDataPath(string fileName, IEnumerable<string> subDirs = null, bool withCreating = true)
         {
             string dirPath = (subDirs != null) ? Path.Join(Application.persistentDataPath, subDirs.JoinToString("/")) : Application.persistentDataPath;
+            
             if (withCreating)
             {
                 Directory.CreateDirectory(dirPath);

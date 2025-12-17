@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using SQLite;
+using SqlCipher4Unity3D;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -26,14 +26,17 @@ namespace ChobiLib.Unity.SQLite
 
         private readonly AsyncLock _lock = new();
 
-        public ChobiSQLite(string dbFilePath, int dbVersion, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
+        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
 
             using (_lock.Lock())
             {
-                _con = new SQLiteConnection(dbFilePath);
+                _con = new SQLiteConnection(
+                    databasePath: dbFilePath,
+                    password: password
+                );
 
                 if (enableForeignKey)
                 {

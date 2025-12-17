@@ -1,0 +1,4 @@
+<linker>
+  <assembly fullname="ChobiLibCS" preserve="all"/>
+  <assembly fullname="SqlCipher4Unity3D" preserve="all"/>
+</linker>
