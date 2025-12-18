@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -114,6 +116,46 @@ namespace ChobiLib.Unity
         public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, float waitSeconds, IEnumerator routine) => mb.DelayStartCoroutine(new WaitForSeconds(waitSeconds), routine);
         public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, WaitForSeconds waitForSeconds, UnityAction action) => mb.DelayStartCoroutine(waitForSeconds, action.ToRoutine());
         public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, float waitSeconds, UnityAction action) => mb.DelayStartCoroutine(new WaitForSeconds(waitSeconds), action);
+
+        public static Task RunCoroutineAsTask(this MonoBehaviour mb, IEnumerator proc)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+
+            if (!mb.gameObject.activeInHierarchy)
+            {
+                tcs.TrySetResult(false);
+                return tcs.Task;
+            }
+
+            mb.StartCoroutine(mb.CoroutineToTaskWrapper(proc, tcs));
+            return tcs.Task;
+        }
+
+
+        private static IEnumerator CoroutineToTaskWrapper(this MonoBehaviour mb, IEnumerator proc, TaskCompletionSource<bool> tcs)
+        {
+            while (true)
+            {
+                object current;
+                try
+                {
+                    if (!proc.MoveNext())
+                    {
+                        break;
+                    }
+                    current = proc.Current;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                    tcs.TrySetException(ex);
+                    yield break;
+                }
+                yield return current;
+            }
+
+            tcs.TrySetResult(true);
+        }
 
     }
 }
