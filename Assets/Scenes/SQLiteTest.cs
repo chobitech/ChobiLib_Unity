@@ -2,7 +2,7 @@ using System.IO;
 using SqlCipher4Unity3D;
 using SQLite.Attributes;
 using UnityEngine;
-
+using ChobiLib.Unity.SQLite;
 
 public class TestTable
     {
@@ -27,13 +27,11 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         con.CreateTable<TestTable>();
     }
 
-    protected override void Awake()
+    void Awake()
     {
         _dbFilePath = Path.Join(Application.persistentDataPath, dbFileName);
 
         DeleteDbFile();
-
-        base.Awake();
     }
 
     void Start()

@@ -45,7 +45,14 @@ namespace ChobiLib.Unity.SQLite
         protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, WorkerThreadName);
 
         public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func) => await Db.WithAsyncInBackground(func);
-        public async Task With(UnityAction<SQLiteConnection> action) => await Db.WithAsyncInBackground(action);
+        public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
+        {
+            await WithAsyncInBackground(c =>
+            {
+                action(c);
+                return false;
+            });
+        }
 
         public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
