@@ -25,62 +25,53 @@ namespace ChobiLib.Unity.SQLite
         public readonly string dbFilePath;
         public readonly int dbVersion;
 
-        private readonly AsyncLock _lock = new();
 
         public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
 
-            using (_lock.Lock())
+
+            _con = new SQLiteConnection(
+                databasePath: dbFilePath,
+                password: password
+            );
+
+            if (enableForeignKey)
             {
-                _con = new SQLiteConnection(
-                    databasePath: dbFilePath,
-                    password: password
-                );
+                _con.Execute("PRAGMA foreign_keys = ON;");
+            }
 
-                if (enableForeignKey)
+            var currentVer = _con.ExecuteScalar<int>("PRAGMA user_version;");
+
+            var execOnCreate = currentVer == 0;
+            var isSameVersion = currentVer == dbVersion;
+
+            if (!isSameVersion)
+            {
+                _con.Execute($"PRAGMA user_version = {dbVersion};");
+            }
+
+            if (initializer != null)
+            {
+                initializer.OnOpen(_con);
+
+                if (execOnCreate)
                 {
-                    _con.Execute("PRAGMA foreign_keys = ON;");
+                    initializer.OnCreate(_con);
                 }
-
-                
-                
-
-                var currentVer = _con.ExecuteScalar<int>("PRAGMA user_version;");
-
-                var execOnCreate = currentVer == 0;
-                var isSameVersion = currentVer == dbVersion;
 
                 if (!isSameVersion)
                 {
-                    _con.Execute($"PRAGMA user_version = {dbVersion};");
+                    initializer.OnUpgrade(_con, currentVer, dbVersion);
                 }
 
-                if (initializer != null)
-                {
-                    initializer.OnOpen(_con);
-
-                    if (execOnCreate)
-                    {
-                        initializer.OnCreate(_con);
-                    }
-
-                    if (!isSameVersion)
-                    {
-                        initializer.OnUpgrade(_con, currentVer, dbVersion);
-                    }
-
-                }
             }
         }
 
         public T With<T>(Func<SQLiteConnection, T> func)
         {
-            using (_lock.Lock())
-            {
-                return func(_con);
-            }
+            return func(_con);
         }
 
         public void With(UnityAction<SQLiteConnection> action) => With<object>(r =>
@@ -91,16 +82,13 @@ namespace ChobiLib.Unity.SQLite
 
         private async Task<T> InnerAsyncFunc<T>(Func<SQLiteConnection, T> func)
         {
-            using (await _lock.LockAsync())
+            if (Thread.CurrentThread.IsThreadPoolThread)
             {
-                if (Thread.CurrentThread.IsThreadPoolThread)
-                {
-                    return func(_con);
-                }
-                else
-                {
-                    return await Task.Run(() => func(_con));
-                }
+                return func(_con);
+            }
+            else
+            {
+                return await Task.Run(() => func(_con));
             }
         }
 
@@ -137,28 +125,28 @@ namespace ChobiLib.Unity.SQLite
                 _con.Commit();
                 return res;
             }
-            catch
+            catch (Exception ex)
             {
                 _con.Rollback();
+                Debug.LogException(ex);
                 throw;
             }
         }
 
         public T WithTransaction<T>(Func<SQLiteConnection, T> func)
         {
-            using (_lock.Lock())
-            {
-                return InnerTransaction(func);
-            }
+            return InnerTransaction(func);
         }
 
-        public void WithTransaction(UnityAction<SQLiteConnection> action) => WithTransaction(
-            c =>
+        public void WithTransaction(UnityAction<SQLiteConnection> action)
+        {
+            
+            WithTransaction(c =>
             {
                 action?.Invoke(c);
                 return false;
-            }
-        );
+            });
+        }
 
 
         public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, T> func)
@@ -181,12 +169,9 @@ namespace ChobiLib.Unity.SQLite
 
         public void Dispose()
         {
-            using (_lock.Lock())
-            {
-                _con?.Close();
-                _con?.Dispose();
-                _con = null;
-            }
+            _con?.Close();
+            _con?.Dispose();
+            _con = null;
         }
     }
 }

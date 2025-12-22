@@ -71,8 +71,15 @@ public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.I
     public T With<T>(Func<SQLiteConnection, T> func) => Db.With(func);
     public void With(UnityAction<SQLiteConnection> action) => Db.With(action);
 
-    public T WithTransaction<T>(Func<SQLiteConnection, T> func) => Db.WithTransaction(func);
-    public void WithTransaction(UnityAction<SQLiteConnection> action) => Db.WithTransaction(action);
+    public T WithTransaction<T>(Func<SQLiteConnection, T> func)
+    {
+        return Db.WithTransaction(func);
+    }
+
+    public void WithTransaction(UnityAction<SQLiteConnection> action)
+    {
+        Db.WithTransaction(d => action(d));
+    }
 
     public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
     {

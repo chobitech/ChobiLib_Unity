@@ -8,6 +8,8 @@ namespace ChobiLib.Unity
     {
         private readonly SemaphoreSlim _mutex = new(1, 1);
 
+        public bool IsLocked => _mutex.CurrentCount == 0;
+
         public async Task<IDisposable> LockAsync()
         {
             await _mutex.WaitAsync();
