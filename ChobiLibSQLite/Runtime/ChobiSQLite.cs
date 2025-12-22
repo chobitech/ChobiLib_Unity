@@ -18,6 +18,8 @@ namespace ChobiLib.Unity.SQLite
             public virtual void OnOpen(SQLiteConnection connection) { }
         }
 
+        public const string WorkerThreadNamePrefix = "ChobiSQLiteWorker";
+
         public static string GetDbPathInPersistentData(string fileName) => Path.Join(Application.persistentDataPath, fileName);
 
         private SQLiteConnection _con;
@@ -25,12 +27,14 @@ namespace ChobiLib.Unity.SQLite
         public readonly string dbFilePath;
         public readonly int dbVersion;
 
+        public readonly ChobiBackgroundWorker backgroundWorker;
 
-        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
+
+        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null, string workerThreadName = null)
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
-
+            
 
             _con = new SQLiteConnection(
                 databasePath: dbFilePath,
@@ -67,111 +71,76 @@ namespace ChobiLib.Unity.SQLite
                 }
 
             }
+
+            var thName = workerThreadName ?? $"{WorkerThreadNamePrefix}-{RandomString.GetCharDigitsRandomString().GetRandomString(8)}";
+            backgroundWorker = new(thName);
+        }
+        
+        public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        {
+            T result = default;
+            await backgroundWorker.RunInBackground(() =>
+            {
+                result = func(_con);
+            });
+            return result;
         }
 
-        public T With<T>(Func<SQLiteConnection, T> func)
+        public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
-            return func(_con);
-        }
-
-        public void With(UnityAction<SQLiteConnection> action) => With<object>(r =>
-        {
-            action(r);
-            return null;
-        });
-
-        private async Task<T> InnerAsyncFunc<T>(Func<SQLiteConnection, T> func)
-        {
-            if (Thread.CurrentThread.IsThreadPoolThread)
+            await WithAsyncInBackground(db =>
             {
-                return func(_con);
-            }
-            else
-            {
-                return await Task.Run(() => func(_con));
-            }
-        }
-
-        private async Task InnerAsyncAction(UnityAction<SQLiteConnection> action)
-        {
-            await InnerAsyncFunc(c =>
-            {
-                action(c);
+                action(db);
                 return false;
             });
         }
 
-        public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
+        public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            return await InnerAsyncFunc(func);
-        }
+            T result = default;
 
-        public async Task WithAsync(UnityAction<SQLiteConnection> action)
-        {
-            await InnerAsyncAction(action);
-        }
-
-        private T InnerTransaction<T>(Func<SQLiteConnection, T> func)
-        {
-            if (_con.IsInTransaction)
+            await backgroundWorker.RunInBackground(() =>
             {
-                return func(_con);
-            }
+                if (_con.IsInTransaction)
+                {
+                    result = func(_con);
+                    return;
+                }
 
-            try
-            {
-                _con.BeginTransaction();
-                var res = (func != null) ? func(_con) : default;
-                _con.Commit();
-                return res;
-            }
-            catch (Exception ex)
-            {
-                _con.Rollback();
-                Debug.LogException(ex);
-                throw;
-            }
-        }
-
-        public T WithTransaction<T>(Func<SQLiteConnection, T> func)
-        {
-            return InnerTransaction(func);
-        }
-
-        public void WithTransaction(UnityAction<SQLiteConnection> action)
-        {
-            
-            WithTransaction(c =>
-            {
-                action?.Invoke(c);
-                return false;
+                try
+                {
+                    _con.BeginTransaction();
+                    result = func(_con);
+                    _con.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _con.Rollback();
+                    Debug.LogException(ex);
+                    result = default;
+                }
             });
+
+            return result;
         }
 
-
-        public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, T> func)
+        public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
-            return await InnerAsyncFunc(_ =>
-            {
-                return InnerTransaction(func);
-            });
-        }
-
-        public async Task WithTransactionAsync(UnityAction<SQLiteConnection> action)
-        {
-            await WithTransactionAsync(db =>
+            await WithTransactionAsyncInBackground(db =>
             {
                 action?.Invoke(_con);
                 return false;
             });
         }
-        
 
-        public void Dispose()
+        public void Dispose(int workerWaitMs)
         {
+            backgroundWorker.Dispose(workerWaitMs);
             _con?.Close();
             _con?.Dispose();
             _con = null;
         }
+
+        public void Dispose() => Dispose(500);
     }
 }

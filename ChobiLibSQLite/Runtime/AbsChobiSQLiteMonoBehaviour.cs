@@ -1,110 +1,76 @@
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
-using ChobiLib.Unity.SQLite;
 using SqlCipher4Unity3D;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.ISQLiteInitializer
+namespace ChobiLib.Unity.SQLite
 {
-
-    public abstract string DbFilePath { get; }
-    public abstract int DbVersion { get; }
-
-    public virtual string DbPassword { get; } = null;
-
-    public virtual bool EnableForeignKey => true;
-
-    private SynchronizationContext _mainContext;
-
-    public UnityAction<SQLiteConnection> onAppQuit;
-
-
-    public virtual void OnCreate(SQLiteConnection con)
+    public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.ISQLiteInitializer
     {
-        
-    }
 
-    private ChobiSQLite _db;
-    public ChobiSQLite Db => _db ??= GenerateDb();
+        public abstract string DbFilePath { get; }
+        public abstract int DbVersion { get; }
 
-    public void DeleteDbFile()
-    {
-        _db?.Dispose();
-        _db = null;
+        public virtual string WorkerThreadName { get; }
 
-        var path = DbFilePath;
-        if (File.Exists(path))
+        public virtual string DbPassword { get; } = null;
+
+        public virtual bool EnableForeignKey => true;
+
+        public UnityAction<SQLiteConnection> onAppQuitProcessInBackground;
+
+
+        public virtual void OnCreate(SQLiteConnection con)
         {
-            File.Delete(path);
+
         }
-    }
 
-    protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this);
+        private ChobiSQLite _db;
+        public ChobiSQLite Db => _db ??= GenerateDb();
 
-
-    protected virtual void Awake()
-    {
-        _mainContext = SynchronizationContext.Current;
-    }
-
-    public void RunOnMainThread(UnityAction action)
-    {
-        if (action != null)
+        public virtual void DeleteDbFile()
         {
-            _mainContext?.Post(_ => action?.Invoke(), null);
-        }
-    }
+            _db?.Dispose();
+            _db = null;
 
-    private void RunOnMainThread<T>(T arg, UnityAction<T> action)
-    {
-        if (action != null)
+            var path = DbFilePath;
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, WorkerThreadName);
+
+        public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func) => await Db.WithAsyncInBackground(func);
+        public async Task With(UnityAction<SQLiteConnection> action) => await Db.WithAsyncInBackground(action);
+
+        public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            _mainContext?.Post(_ => action(arg), null);
+            return await Db.WithTransactionAsyncInBackground(func);
         }
-    }
 
+        public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
+        {
+            await Db.WithTransactionAsyncInBackground(action);
+        }
 
+        protected virtual void OnApplicationQuit()
+        {
+            if (_db != null)
+            {
+                var quitTask = _db.WithTransactionAsyncInBackground(con =>
+                {
+                    onAppQuitProcessInBackground?.Invoke(con);
+                });
 
-    public T With<T>(Func<SQLiteConnection, T> func) => Db.With(func);
-    public void With(UnityAction<SQLiteConnection> action) => Db.With(action);
+                quitTask.Wait();
 
-    public T WithTransaction<T>(Func<SQLiteConnection, T> func)
-    {
-        return Db.WithTransaction(func);
-    }
-
-    public void WithTransaction(UnityAction<SQLiteConnection> action)
-    {
-        Db.WithTransaction(d => action(d));
-    }
-
-    public async Task<T> WithAsync<T>(Func<SQLiteConnection, T> func)
-    {
-        return await Db.WithAsync(func);
-    }
-
-    public async Task WithAsync(UnityAction<SQLiteConnection> action)
-    {
-        await Db.WithAsync(action);
-    }
-
-    public async Task<T> WithTransactionAsync<T>(Func<SQLiteConnection, T> func)
-    {
-        return await Db.WithTransactionAsync(func);
-    }
-
-    public async Task WithTransactionAsync(UnityAction<SQLiteConnection> action)
-    {
-        await Db.WithTransactionAsync(action);
-    }
-
-    protected virtual void OnApplicationQuit()
-    {
-        WithTransaction(db => onAppQuit?.Invoke(db));
-        _db?.Dispose();
-        _db = null;
+                _db.Dispose(500);
+                _db = null;
+            }
+        }
     }
 }
