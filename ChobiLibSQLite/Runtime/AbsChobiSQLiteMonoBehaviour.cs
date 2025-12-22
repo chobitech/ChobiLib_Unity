@@ -68,12 +68,10 @@ namespace ChobiLib.Unity.SQLite
         {
             if (_db != null)
             {
-                var quitTask = _db.WithTransactionAsyncInBackground(con =>
+                _ = _db.WithTransactionAsyncInBackground(con =>
                 {
                     onAppQuitProcessInBackground?.Invoke(con);
                 });
-
-                quitTask.Wait();
 
                 _db.Dispose(500);
                 _db = null;

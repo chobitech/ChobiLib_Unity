@@ -89,11 +89,15 @@ namespace ChobiLib.Unity
         public void Dispose(int waitTimeMs)
         {
             _queue.CompleteAdding();
-            _cts.Cancel();
 
             if (_workerThread.IsAlive && waitTimeMs > 0)
             {
                 _workerThread.Join(waitTimeMs);
+            }
+
+            if (!_cts.IsCancellationRequested)
+            {
+                _cts.Cancel();
             }
 
             _cts.Dispose();

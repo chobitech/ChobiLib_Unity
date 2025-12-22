@@ -34,8 +34,16 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         DeleteDbFile();
     }
 
-    void Start()
+    async void Start()
     {
+
+        await WithTransactionAsyncInBackground(db =>
+        {
+            var id = db.Insert(new TestTable() { Value = "aaaa" });
+            Debug.Log(id);
+        });
+
+        Debug.Log("start end");
 
 
         /*
