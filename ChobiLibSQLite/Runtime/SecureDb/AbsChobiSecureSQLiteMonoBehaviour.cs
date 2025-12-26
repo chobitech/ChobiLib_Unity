@@ -14,7 +14,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public async Task<bool> WaitForSQLiteInitialized()
         {
-            return await _initTcs.Task;
+            var res = await _initTcs.Task;
+            if (!res)
+            {
+                Debug.LogWarning("SQlite Initialize failed");
+            }
+            return res;
         }
 
         public async Task<bool> WaitForSQLiteInitialized(int timeoutMs)
@@ -24,7 +29,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             var complete = await Task.WhenAny(checkTask, toTask);
             if (complete == checkTask)
             {
-                return true;
+                var res = checkTask.Result;
+                if (!res)
+                {
+                    Debug.LogWarning("SQlite Initialize failed");
+                }
+                return res;
             }
             else
             {
@@ -33,7 +43,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        public bool IsInitialized { get; private set; }
+        private bool _keyInitializeFinished;
+        public bool KeyAvailable => HKey != null && HSeed != null;
 
         protected abstract string HSeedFilePath { get; }
 
@@ -57,12 +68,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         protected string GenDbPw()
         {
-            if (!IsInitialized)
-            {
-                throw new Exception("DB not initialized");
-            }
-
-            if (HKey ==  null || HSeed == null)
+            if (!KeyAvailable)
             {
                 throw new Exception("DB password is null");
             }
@@ -78,11 +84,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         protected async Task LoadKeys()
         {
-            if (IsInitialized)
-            {
-                return;
-            }
-
             try
             {
                 HKey = await LoadHKeyAsync();
@@ -113,7 +114,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         protected async Task Initialize()
         {
-            if (IsInitialized)
+            if (_keyInitializeFinished)
             {
                 return;
             }
@@ -121,13 +122,16 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             try
             {
                 await LoadKeys();
-                IsInitialized = true;
                 _initTcs.TrySetResult(true);
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
                 _initTcs.TrySetResult(false);
+            }
+            finally
+            {
+                _keyInitializeFinished = true;
             }
         }
 

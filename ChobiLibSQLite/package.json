@@ -1,6 +1,6 @@
 {
     "name": "com.chobitech.unity.sqlite",
-    "version": "0.2.10",
+    "version": "0.2.11",
     "displayName": "ChobiLibSQLite",
     "description": "unity library for personal use",
     "unity": "2022.3",
