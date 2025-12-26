@@ -90,6 +90,8 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
+        protected virtual int WaitTimeMsOnApplicationQuit => 500;
+
         protected virtual void OnApplicationQuit()
         {
             if (_db != null && !_db.IsDisposed)
@@ -97,11 +99,9 @@ namespace ChobiLib.Unity.SQLite
                 _db.WithTransactionSync(db =>
                 {
                     onAppQuitProcessInBackground?.Invoke(db);
-                    Debug.Log($"quit process");
-                }, 500);
+                }, WaitTimeMsOnApplicationQuit);
 
                 _db.Dispose();
-                Debug.Log("db disposed");
             }
         }
     }
