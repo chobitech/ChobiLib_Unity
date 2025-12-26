@@ -4,27 +4,28 @@ using UnityEngine;
 using System;
 using System.IO;
 using ChobiLib.Security;
-using UnityEngine.Events;
-using System.Collections.Generic;
+
 
 namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public abstract class AbsChobiSecureSQLiteMonoBehaviour : AbsChobiSQLiteMonoBehaviour
     {
-        public bool IsInitialized { get; private set; }
+        private readonly TaskCompletionSource<bool> _initTcs = new();
 
-        private readonly Queue<UnityAction> _afterInitializedActionQueue = new();
-
-        public void RunAfterInitialized(UnityAction action)
+        public async Task<bool> WaitForInitialized()
         {
-            if (IsInitialized)
-            {
-                action();
-                return;
-            }
-
-            _afterInitializedActionQueue.Enqueue(action);
+            return await _initTcs.Task;
         }
+
+        public async Task<bool> WaitForInitialized(int timeoutMs)
+        {
+            var checkTask = _initTcs.Task;
+            var toTask = Task.Delay(timeoutMs);
+            var complete = await Task.WhenAny(checkTask, toTask);
+            return complete == checkTask;
+        }
+
+        public bool IsInitialized { get; private set; }
 
         protected abstract string HSeedFilePath { get; }
 
@@ -78,20 +79,26 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             {
                 HKey = await LoadHKeyAsync();
 
-                var hsPath = HSeedFilePath;
+                var cToken = destroyCancellationToken;
 
-                if (!File.Exists(hsPath))
+                await Task.Run(async () =>
                 {
-                    var bArr = ChobiLib.GenerateRandomBytes(32);
-                    HSeed = Convert.ToBase64String(bArr);
-                    await File.WriteAllTextAsync(hsPath, HSeed);
-                }
-                else
-                {
-                    HSeed = await File.ReadAllTextAsync(hsPath);
-                }
+                    var hsPath = HSeedFilePath;
+
+                    if (!File.Exists(hsPath))
+                    {
+                        var bArr = ChobiLib.GenerateRandomBytes(32);
+                        HSeed = Convert.ToBase64String(bArr);
+                        await File.WriteAllTextAsync(hsPath, HSeed);
+                    }
+                    else
+                    {
+                        HSeed = await File.ReadAllTextAsync(hsPath);
+                    }
+                }, cToken);
 
                 IsInitialized = true;
+                _initTcs.TrySetResult(true);
             }
             catch (Exception ex)
             {
@@ -109,16 +116,30 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             try
             {
                 await LoadKeys();
-                IsInitialized = true;
-                while (_afterInitializedActionQueue.TryDequeue(out var act))
-                {
-                    act?.Invoke();
-                }
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
             }
+        }
+
+        public override async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        {
+            if (!await WaitForInitialized(500))
+            {
+                return default;
+            }
+
+            return await base.WithAsyncInBackground(func);
+        }
+
+        public override async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        {
+            if (!await WaitForInitialized(500))
+            {
+                return default;
+            }
+            return await base.WithTransactionAsyncInBackground(func);
         }
         
     }
