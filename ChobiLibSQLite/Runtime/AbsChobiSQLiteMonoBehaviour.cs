@@ -21,6 +21,8 @@ namespace ChobiLib.Unity.SQLite
 
         public UnityAction<SQLiteConnection> onAppQuitProcessInBackground;
 
+        public UnityAction<SQLiteConnection> onAppPausedProcessInBackground;
+
 
         public virtual void OnCreate(SQLiteConnection con)
         {
@@ -42,7 +44,7 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, WorkerThreadName);
+        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this);
 
         public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func) => await Db.WithAsyncInBackground(func);
         public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
@@ -64,17 +66,38 @@ namespace ChobiLib.Unity.SQLite
             await Db.WithTransactionAsyncInBackground(action);
         }
 
+        
+        protected virtual void CloseDb()
+        {
+            if (_db != null && !_db.IsDisposed)
+            {
+                _db.Dispose();
+            }
+        }
+
+        protected virtual void OnApplicationPause(bool pause)
+        {
+            if (pause && _db != null && !_db.IsDisposed)
+            {
+                _ = _db.WithTransactionAsyncInBackground(db =>
+                {
+                    onAppPausedProcessInBackground?.Invoke(db);
+                });
+            }
+        }
+
         protected virtual void OnApplicationQuit()
         {
-            if (_db != null)
+            if (_db != null && !_db.IsDisposed)
             {
-                _ = _db.WithTransactionAsyncInBackground(con =>
+                _db.WithTransactionSync(db =>
                 {
-                    onAppQuitProcessInBackground?.Invoke(con);
-                });
+                    onAppQuitProcessInBackground?.Invoke(db);
+                    Debug.Log($"quit process");
+                }, 500);
 
-                _db.Dispose(500);
-                _db = null;
+                _db.Dispose();
+                Debug.Log("db disposed");
             }
         }
     }

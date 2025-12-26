@@ -18,8 +18,6 @@ namespace ChobiLib.Unity.SQLite
             public virtual void OnOpen(SQLiteConnection connection) { }
         }
 
-        public const string WorkerThreadNamePrefix = "ChobiSQLiteWorker";
-
         public static string GetDbPathInPersistentData(string fileName) => Path.Join(Application.persistentDataPath, fileName);
 
         private SQLiteConnection _con;
@@ -27,14 +25,18 @@ namespace ChobiLib.Unity.SQLite
         public readonly string dbFilePath;
         public readonly int dbVersion;
 
-        public readonly ChobiBackgroundWorker backgroundWorker;
+        private readonly SemaphoreSlim _dbLock = new(1, 1);
+
+        public volatile bool _isDisposed;
+        public bool IsDisposed => _isDisposed;
+
+        public bool IsOpened => _con != null;
 
 
-        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null, string workerThreadName = null)
+        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
-            
 
             _con = new SQLiteConnection(
                 databasePath: dbFilePath,
@@ -59,7 +61,6 @@ namespace ChobiLib.Unity.SQLite
             if (initializer != null)
             {
                 initializer.OnOpen(_con);
-
                 if (execOnCreate)
                 {
                     initializer.OnCreate(_con);
@@ -69,78 +70,141 @@ namespace ChobiLib.Unity.SQLite
                 {
                     initializer.OnUpgrade(_con, currentVer, dbVersion);
                 }
-
             }
+        }
 
-            var thName = workerThreadName ?? $"{WorkerThreadNamePrefix}-{RandomString.GetCharDigitsRandomString().GetRandomString(8)}";
-            backgroundWorker = new(thName);
+
+        private void CheckIsDisposed()
+        {
+            if (IsDisposed)
+            {
+                throw new InvalidOperationException("This instance is already disposed");
+            }
         }
         
         public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            T result = default;
-            await backgroundWorker.RunInBackground(() =>
+            CheckIsDisposed();
+
+            if (func == null)
             {
-                result = func(_con);
-            });
-            return result;
+                return default;
+            }
+
+            await _dbLock.WaitAsync();
+            try
+            {
+                CheckIsDisposed();
+                return await Task.Run(() => func(_con));
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
             await WithAsyncInBackground(db =>
             {
-                action(db);
+                action?.Invoke(db);
                 return false;
             });
         }
 
+        private T InnerTransactionProcess<T>(Func<SQLiteConnection, T> func)
+        {
+            if (func == null)
+            {
+                return default;
+            }
+
+            if (_con.IsInTransaction)
+            {
+                return func(_con);
+            }
+
+            _con.BeginTransaction();
+
+            try
+            {
+                var result = func(_con);
+                _con.Commit();
+                return result;
+            }
+            catch
+            {
+                _con.Rollback();
+                throw;
+            }
+        }
+
         public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            T result = default;
+            CheckIsDisposed();
 
-            await backgroundWorker.RunInBackground(() =>
+            await _dbLock.WaitAsync();
+
+            try
             {
-                if (_con.IsInTransaction)
-                {
-                    result = func(_con);
-                    return;
-                }
-
-                try
-                {
-                    _con.BeginTransaction();
-                    result = func(_con);
-                    _con.Commit();
-                }
-                catch (Exception ex)
-                {
-                    _con.Rollback();
-                    Debug.LogException(ex);
-                    result = default;
-                }
-            });
-
-            return result;
+                CheckIsDisposed();
+                return await Task.Run(() => InnerTransactionProcess(func));
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
             await WithTransactionAsyncInBackground(db =>
             {
-                action?.Invoke(_con);
+                action?.Invoke(db);
                 return false;
             });
         }
 
-        public void Dispose(int workerWaitMs)
+        public void Dispose()
         {
-            backgroundWorker.Dispose(workerWaitMs);
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
             _con?.Close();
             _con?.Dispose();
             _con = null;
+
+            _dbLock.Dispose();
         }
 
-        public void Dispose() => Dispose(500);
+        internal T WithTransactionSync<T>(Func<SQLiteConnection, T> func, int waitTimeMs)
+        {
+            CheckIsDisposed();
+
+            if(!_dbLock.Wait(waitTimeMs))
+            {
+                return default;
+            }
+
+            try
+            {
+                CheckIsDisposed();
+                return InnerTransactionProcess(func);
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+        }
+
+        internal void WithTransactionSync(UnityAction<SQLiteConnection> action, int waitTimeMs) => WithTransactionSync(db =>
+        {
+            action?.Invoke(db);
+            return false;
+        }, waitTimeMs);
     }
 }

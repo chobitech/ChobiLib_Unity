@@ -1,12 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using UnityEngine.UIElements;
 
 namespace ChobiLib.Unity
 {
@@ -63,26 +60,38 @@ namespace ChobiLib.Unity
         }
 
 
-        public Task RunInBackground(UnityAction action)
+        public Task RunInBackground(UnityAction action, CancellationToken token = default)
         {
+            token.ThrowIfCancellationRequested();
+
             if (_queue.IsAddingCompleted)
             {
                 return Task.FromException(new InvalidOperationException("Worker is already disposed."));
             }
+
+            token.ThrowIfCancellationRequested();
 
             var tcs = new TaskCompletionSource<bool>();
             _queue.Add(() =>
             {
                 try
                 {
+                    token.ThrowIfCancellationRequested();
                     action();
                     tcs.SetResult(true);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    throw ex;
                 }
                 catch (Exception ex)
                 {
                     tcs.SetException(ex);
                 }
             });
+
+            token.ThrowIfCancellationRequested();
+
             return tcs.Task;
         }
 
