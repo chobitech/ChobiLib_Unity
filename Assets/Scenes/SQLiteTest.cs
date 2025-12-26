@@ -3,6 +3,14 @@ using SqlCipher4Unity3D;
 using SQLite.Attributes;
 using UnityEngine;
 using ChobiLib.Unity.SQLite;
+using ChobiLib.Unity.SQLite.SecureDb;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class TTT
+{
+    public string s;
+}
 
 public class TestTable
     {
@@ -36,14 +44,16 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
 
     async void Start()
     {
-
-        await WithTransactionAsyncInBackground(db =>
+        var obj = new TTT()
         {
-            var id = db.Insert(new TestTable() { Value = "aaaa" });
-            Debug.Log(id);
-        });
+            s = "aaaaa--"
+        };
+        
+        var cData = SecureDbContentDataDao.CreateContentData(obj);
+        Debug.Log(cData);
 
-        Debug.Log("start end");
+        var dData = SecureDbContentDataDao.InstantiateFromContentData<TTT>(cData);
+        Debug.Log(dData?.s);
 
 
         /*

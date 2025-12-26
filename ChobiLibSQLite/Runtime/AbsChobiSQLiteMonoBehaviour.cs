@@ -90,7 +90,7 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        protected virtual int WaitTimeMsOnApplicationQuit => 500;
+        protected virtual int LockWaitTimeMsOnApplicationQuit => 1000;
 
         protected virtual void OnApplicationQuit()
         {
@@ -99,7 +99,7 @@ namespace ChobiLib.Unity.SQLite
                 _db.WithTransactionSync(db =>
                 {
                     onAppQuitProcessInBackground?.Invoke(db);
-                }, WaitTimeMsOnApplicationQuit);
+                }, LockWaitTimeMsOnApplicationQuit);
 
                 _db.Dispose();
             }

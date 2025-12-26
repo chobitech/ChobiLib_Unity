@@ -119,7 +119,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        protected async Task Initialize()
+        protected async Task InitDb()
         {
             if (_keyInitializeFinished)
             {
@@ -128,6 +128,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
             try
             {
+                if (NoEncrypt)
+                {
+                    _initTcs.TrySetResult(true);
+                    return;
+                }
+
                 await LoadKeys();
                 _initTcs.TrySetResult(true);
             }

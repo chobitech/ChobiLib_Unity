@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ChobiLib.Security;
+using SqlCipher4Unity3D;
 using UnityEngine;
 
 namespace ChobiLib.Unity.SQLite.SecureDb
@@ -15,13 +17,16 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             Db = db;
         }
 
-        public SecureDbContentData CreateContentData(object obj, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentData(object obj, string contentId = null, string tagString = null, int? tagInt = null)
         {
             var json = JsonUtility.ToJson(obj);
             var hk = ChobiLib.GenerateRandomBytes(32);
-            var hData = new HMACSHA256(hk).ComputeHash(json.ConvertToByteArray());
 
+            var tOfs = DateTimeOffset.UtcNow;
             var cid = contentId ?? Guid.NewGuid().ToString();
+            var j = $"{cid}\n{tOfs.Ticks}\n{Convert.ToBase64String(hk)}\n{json}";
+
+            var hData = new HMACSHA256(hk).ComputeHash(j.ConvertToByteArray());
 
             return new()
             {
@@ -31,50 +36,75 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 TagInt = tagInt,
                 HKey = hk,
                 HData = hData,
-                CreateTimeOffsetUtc = DateTimeOffset.UtcNow
+                CreateTimeOffsetUtc = tOfs,
             };
         }
 
-        public S InstantiateFromContentData<S>(SecureDbContentData cData)
+        public static S InstantiateFromContentData<S>(SecureDbContentData cData)
         {
             if (cData == null)
             {
                 return default;
             }
 
+            var r = $"{cData.ContentId}\n{cData.CreateTimeOffsetUtc.Ticks}\n{Convert.ToBase64String(cData.HKey)}\n{cData.Content}";
+
             var ch = new ChobiHash(cData.HKey);
-            if (!ch.CompareHash(cData.Content.ConvertToByteArray(), cData.HData))
+            if (!ch.CompareHash(r.ConvertToByteArray(), cData.HData))
             {
+                Debug.LogWarning("SecureDbContentData hash value is not match");
                 return default;
             }
 
             return JsonUtility.FromJson<S>(cData.Content);
         }
 
-        public async Task<bool> SaveToDbAsync(params SecureDbContentData[] cData)
+        public static Dictionary<string, bool> SaveToDb(SQLiteConnection con, params SecureDbContentData[] cData)
+        {
+            var res = new Dictionary<string, bool>();
+
+            try
+            {
+                foreach (var d in cData)
+                {
+                    var r = con.InsertOrReplace(d);
+                    res[d.ContentId] = r == 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                res = new();
+            }
+
+            return res;
+        }
+
+        public static S InstantiateFromDb<S>(SQLiteConnection con, string contentId)
+        {
+            var cData = con.Find<SecureDbContentData>(contentId);
+            return InstantiateFromContentData<S>(cData);
+        }
+
+        public async Task<Dictionary<string, bool>> SaveToDbAsync(params SecureDbContentData[] cData)
         {
             return await Db.WithTransactionAsyncInBackground(db =>
             {
                 try
                 {
-                    foreach (var d in cData)
-                    {
-                        db.InsertOrReplace(d);
-                    }
-                    return true;
+                    return SaveToDb(db, cData);
                 }
                 catch (Exception ex)
                 {
                     Debug.LogException(ex);
-                    return false;
+                    return new();
                 }
             });
         }
 
-        public async Task<S> InstantiateFromDb<S>(string contentId)
+        public async Task<S> InstantiateFromDbAsync<S>(string contentId)
         {
-            var cData = await Db.WithTransactionAsyncInBackground(db => db.Find<SecureDbContentData>(contentId));
-            return InstantiateFromContentData<S>(cData);
+            return await Db.WithTransactionAsyncInBackground(db => InstantiateFromDb<S>(db, contentId));
         }
 
     }
