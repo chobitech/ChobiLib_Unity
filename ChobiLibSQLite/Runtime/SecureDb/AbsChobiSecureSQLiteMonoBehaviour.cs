@@ -127,12 +127,13 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             catch (Exception ex)
             {
                 Debug.LogException(ex);
+                _initTcs.TrySetResult(false);
             }
         }
 
         public override async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            if (!await WaitForSQLiteInitialized(500))
+            if (!await WaitForSQLiteInitialized())
             {
                 return default;
             }
@@ -142,10 +143,11 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            if (!await WaitForSQLiteInitialized(500))
+            if (!await WaitForSQLiteInitialized())
             {
                 return default;
             }
+
             return await base.WithTransactionAsyncInBackground(func);
         }
         
