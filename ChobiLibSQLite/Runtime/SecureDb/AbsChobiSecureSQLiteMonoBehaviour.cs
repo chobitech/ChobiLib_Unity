@@ -22,6 +22,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return res;
         }
 
+        public bool NoEncrypt { get; protected set; } = false;
+
         public async Task<bool> WaitForSQLiteInitialized(int timeoutMs)
         {
             var checkTask = _initTcs.Task;
@@ -68,6 +70,11 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         protected string GenDbPw()
         {
+            if (NoEncrypt)
+            {
+                return null;
+            }
+            
             if (!KeyAvailable)
             {
                 throw new Exception("DB password is null");
