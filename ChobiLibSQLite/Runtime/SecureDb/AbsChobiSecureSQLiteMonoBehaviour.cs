@@ -50,6 +50,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         protected abstract string HSeedFilePath { get; }
 
+        protected virtual int HSeedByteSize { get; } = 48;
+
         protected abstract Task<string> LoadHKeyAsync();
 
         protected string HKey { get; private set; }
@@ -103,7 +105,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
                     if (!File.Exists(hsPath))
                     {
-                        var bArr = ChobiLib.GenerateRandomBytes(32);
+                        var bArr = ChobiLib.GenerateRandomBytes(HSeedByteSize);
                         HSeed = Convert.ToBase64String(bArr);
                         await File.WriteAllTextAsync(hsPath, HSeed);
                     }
