@@ -12,17 +12,25 @@ namespace ChobiLib.Unity.SQLite.SecureDb
     {
         private readonly TaskCompletionSource<bool> _initTcs = new();
 
-        public async Task<bool> WaitForInitialized()
+        public async Task<bool> WaitForSQLiteInitialized()
         {
             return await _initTcs.Task;
         }
 
-        public async Task<bool> WaitForInitialized(int timeoutMs)
+        public async Task<bool> WaitForSQLiteInitialized(int timeoutMs)
         {
             var checkTask = _initTcs.Task;
             var toTask = Task.Delay(timeoutMs);
             var complete = await Task.WhenAny(checkTask, toTask);
-            return complete == checkTask;
+            if (complete == checkTask)
+            {
+                return true;
+            }
+            else
+            {
+                Debug.LogWarning("SQLite init wait timeout");
+                return false;
+            }
         }
 
         public bool IsInitialized { get; private set; }
@@ -96,9 +104,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                         HSeed = await File.ReadAllTextAsync(hsPath);
                     }
                 }, cToken);
-
-                IsInitialized = true;
-                _initTcs.TrySetResult(true);
             }
             catch (Exception ex)
             {
@@ -116,6 +121,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             try
             {
                 await LoadKeys();
+                IsInitialized = true;
+                _initTcs.TrySetResult(true);
             }
             catch (Exception ex)
             {
@@ -125,7 +132,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            if (!await WaitForInitialized(500))
+            if (!await WaitForSQLiteInitialized(500))
             {
                 return default;
             }
@@ -135,7 +142,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
-            if (!await WaitForInitialized(500))
+            if (!await WaitForSQLiteInitialized(500))
             {
                 return default;
             }
