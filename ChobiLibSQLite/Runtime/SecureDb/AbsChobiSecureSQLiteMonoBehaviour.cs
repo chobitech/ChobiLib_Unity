@@ -99,10 +99,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
                 var cToken = destroyCancellationToken;
 
+                var hsPath = HSeedFilePath;
+
                 await Task.Run(async () =>
                 {
-                    var hsPath = HSeedFilePath;
-
                     if (!File.Exists(hsPath))
                     {
                         var bArr = ChobiLib.GenerateRandomBytes(HSeedByteSize);
