@@ -121,7 +121,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        protected async Task InitDb()
+        protected async Task InitDb(bool withOpenDb = true)
         {
             if (_keyInitializeFinished)
             {
@@ -137,6 +137,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 }
 
                 await LoadKeys();
+                
+                if (withOpenDb)
+                {
+                    _ = Db;
+                }
+
                 _initTcs.TrySetResult(true);
             }
             catch (Exception ex)
