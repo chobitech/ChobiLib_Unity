@@ -6,12 +6,8 @@ using ChobiLib.Unity;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class TestObj : AsyncInitializeMonoBehaviour<TestObj>
+public class TestObj : MonoBehaviour
 {
-    protected override IEnumerator InitializeRoutine()
-    {
-        yield break;
-    }
 
 
     public Transform testCube;

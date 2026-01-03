@@ -132,10 +132,11 @@ namespace ChobiLib.Unity.SQLite
                 _con.Commit();
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
                 _con.Rollback();
-                throw;
+                Debug.LogException(ex);
+                throw ex;
             }
         }
 
@@ -194,6 +195,11 @@ namespace ChobiLib.Unity.SQLite
             {
                 CheckIsDisposed();
                 return InnerTransactionProcess(func);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return default;
             }
             finally
             {

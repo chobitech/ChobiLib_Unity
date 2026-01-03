@@ -55,6 +55,22 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         var dData = SecureDbContentDataDao.InstantiateFromContentData<TTT>(cData);
         Debug.Log(dData?.s);
 
+        onAppPausedProcessInBackground += con =>
+        {
+            Debug.Log(con);
+        };
+
+        await WithTransactionAsyncInBackground(db =>
+        {
+            db.Insert(new TestTable() { Value = "aaaaaaaaa" });
+        });
+
+        onAppQuitProcessInBackground += db =>
+        {
+            Debug.Log($"onAppQuit");
+        };
+
+
 
         /*
         await Task.Run(async () =>

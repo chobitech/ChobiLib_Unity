@@ -94,12 +94,19 @@ namespace ChobiLib.Unity.SQLite
 
         protected virtual void OnApplicationQuit()
         {
+            Debug.Log($"app quit start: _db = {_db}");
+
             if (_db != null && !_db.IsDisposed)
             {
+                Debug.Log($"enter quit process");
+
                 _db.WithTransactionSync(db =>
                 {
+                    Debug.Log($"enter last transaction");
                     onAppQuitProcessInBackground?.Invoke(db);
                 }, LockWaitTimeMsOnApplicationQuit);
+
+                Debug.Log("exit quit transaction");
 
                 _db.Dispose();
             }
