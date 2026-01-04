@@ -84,17 +84,15 @@ namespace ChobiLib.Unity.SQLite
 
         protected virtual void OnApplicationPause(bool pause)
         {
-            ChobiSQLite.Log($"Enter OnAppPause", showLog: showDebugLog);
-
             if (pause && _db != null && !_db.IsDisposed)
             {
+                ChobiSQLite.Log($"Enter OnAppPause", showLog: showDebugLog);
                 _ = _db.WithTransactionAsyncInBackground(db =>
                 {
                     onAppPausedProcessInBackground?.Invoke(db);
                 });
+                ChobiSQLite.Log($"Exit OnAppPause", showLog: showDebugLog);
             }
-
-            ChobiSQLite.Log($"Exit OnAppPause", showLog: showDebugLog);
         }
 
         protected virtual int LockWaitTimeMsOnApplicationQuit => 1000;
