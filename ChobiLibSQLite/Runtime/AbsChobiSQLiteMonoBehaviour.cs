@@ -19,6 +19,9 @@ namespace ChobiLib.Unity.SQLite
 
         public virtual bool EnableForeignKey => true;
 
+        [SerializeField]
+        private bool showDebugLog = true;
+
         public UnityAction<SQLiteConnection> onAppQuitProcessInBackground;
 
         public UnityAction<SQLiteConnection> onAppPausedProcessInBackground;
@@ -44,7 +47,7 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this);
+        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, showDebugLog);
 
         public virtual async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func) => await Db.WithAsyncInBackground(func);
         public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
@@ -81,6 +84,8 @@ namespace ChobiLib.Unity.SQLite
 
         protected virtual void OnApplicationPause(bool pause)
         {
+            ChobiSQLite.Log($"Enter OnAppPause", showLog: showDebugLog);
+
             if (pause && _db != null && !_db.IsDisposed)
             {
                 _ = _db.WithTransactionAsyncInBackground(db =>
@@ -88,25 +93,24 @@ namespace ChobiLib.Unity.SQLite
                     onAppPausedProcessInBackground?.Invoke(db);
                 });
             }
+
+            ChobiSQLite.Log($"Exit OnAppPause", showLog: showDebugLog);
         }
 
         protected virtual int LockWaitTimeMsOnApplicationQuit => 1000;
 
         protected virtual void OnApplicationQuit()
         {
-            Debug.Log($"app quit start: _db = {_db}");
-
             if (_db != null && !_db.IsDisposed)
             {
-                Debug.Log($"enter quit process");
+                ChobiSQLite.Log($"Enter OnAppQuit", showLog: showDebugLog);
 
                 _db.WithTransactionSync(db =>
                 {
-                    Debug.Log($"enter last transaction");
                     onAppQuitProcessInBackground?.Invoke(db);
                 }, LockWaitTimeMsOnApplicationQuit);
 
-                Debug.Log("exit quit transaction");
+                ChobiSQLite.Log($"Exit OnAppQuit", showLog: showDebugLog);
 
                 _db.Dispose();
             }

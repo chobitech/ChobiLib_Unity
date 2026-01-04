@@ -10,6 +10,41 @@ namespace ChobiLib.Unity.SQLite
 {
     public class ChobiSQLite : IDisposable
     {
+        private const string DefaultTag = "ChobiSQLite";
+
+        internal static void Log(object o, string tag = DefaultTag, bool showLog = true)
+        {
+            if (showLog)
+            {
+                Debug.Log($"[{tag}] {o}");
+            }
+        }
+
+        internal static void LogWarning(object o, string  tag = DefaultTag, bool showLog = true)
+        {
+            if (showLog)
+            {
+                Debug.LogWarning($"[{tag}] {o}");
+            }
+        }
+
+        internal static void LogError(object o, string  tag = DefaultTag, bool showLog = true)
+        {
+            if (showLog)
+            {
+                Debug.LogError($"[{tag}] {o}");
+            }
+        }
+
+        internal static void LogException(Exception ex, string  tag = DefaultTag, bool showLog = true)
+        {
+            if (showLog)
+            {
+                Debug.LogException(new Exception($"[{tag}] {ex.Message}"));
+            }
+        }
+
+
         public interface ISQLiteInitializer
         {
             void OnCreate(SQLiteConnection connection) { }
@@ -32,11 +67,14 @@ namespace ChobiLib.Unity.SQLite
 
         public bool IsOpened => _con != null;
 
+        public bool showDebugLog = true;
 
-        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null)
+
+        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null, bool showDebugLog = true)
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
+            this.showDebugLog = showDebugLog;
 
             _con = new SQLiteConnection(
                 databasePath: dbFilePath,
@@ -71,6 +109,8 @@ namespace ChobiLib.Unity.SQLite
                     initializer.OnUpgrade(_con, currentVer, dbVersion);
                 }
             }
+
+            Log($"Create and open \"{dbFilePath}\"", showLog: showDebugLog);
         }
 
 
@@ -78,13 +118,17 @@ namespace ChobiLib.Unity.SQLite
         {
             if (IsDisposed)
             {
-                throw new InvalidOperationException("This instance is already disposed");
+                var ex = new InvalidOperationException("This instance is already disposed");
+                LogException(ex, showLog: showDebugLog);
+                throw ex;
             }
         }
         
         public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
             CheckIsDisposed();
+
+            Log("Enter Async Process", showLog: showDebugLog);
 
             if (func == null)
             {
@@ -100,6 +144,7 @@ namespace ChobiLib.Unity.SQLite
             finally
             {
                 _dbLock.Release();
+                Log("Exit Async Process", showLog: showDebugLog);
             }
         }
 
@@ -135,7 +180,7 @@ namespace ChobiLib.Unity.SQLite
             catch (Exception ex)
             {
                 _con.Rollback();
-                Debug.LogException(ex);
+                LogException(ex, showLog: showDebugLog);
                 throw ex;
             }
         }
@@ -143,6 +188,8 @@ namespace ChobiLib.Unity.SQLite
         public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
             CheckIsDisposed();
+
+            Log("Enter Async Transaction Process", showLog: showDebugLog);
 
             await _dbLock.WaitAsync();
 
@@ -154,6 +201,7 @@ namespace ChobiLib.Unity.SQLite
             finally
             {
                 _dbLock.Release();
+                Log("Exit Async Transaction Process", showLog: showDebugLog);
             }
         }
 
@@ -180,14 +228,19 @@ namespace ChobiLib.Unity.SQLite
             _con = null;
 
             _dbLock.Dispose();
+
+            Log($"Disposed", showLog: showDebugLog);
         }
 
         internal T WithTransactionSync<T>(Func<SQLiteConnection, T> func, int waitTimeMs)
         {
             CheckIsDisposed();
 
+            Log("Enter Sync Transaction Process", showLog: showDebugLog);
+
             if(!_dbLock.Wait(waitTimeMs))
             {
+                LogWarning("DB lock timeout", showLog: showDebugLog);
                 return default;
             }
 
@@ -198,12 +251,13 @@ namespace ChobiLib.Unity.SQLite
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                LogException(ex, showLog: showDebugLog);
                 return default;
             }
             finally
             {
                 _dbLock.Release();
+                Log("Exit Sync Transaction Process", showLog: showDebugLog);
             }
         }
 
