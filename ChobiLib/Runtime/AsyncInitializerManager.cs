@@ -1,47 +1,49 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ChobiLib;
 using UnityEngine;
 
-public class AsyncInitializerManager : MonoBehaviour
+namespace ChobiLib.Unity
 {
-    [SerializeField]
-    private List<AsyncInitializer> initializers;
-
-    public bool IsAllInitialized { get; private set; }
-
-    public async Task WaitForAllInitializedAsync()
+    public class AsyncInitializerManager : MonoBehaviour
     {
-        while (!IsAllInitialized)
-        {
-            await Task.Yield();
-        }
-    }
+        [SerializeField]
+        private List<AsyncInitializer> initializers;
 
-    public IEnumerator WaitForAllInitializedRoutine()
-    {
-        while (!IsAllInitialized)
-        {
-            yield return null;
-        }
-    }
+        public bool IsAllInitialized { get; private set; }
 
-    public async Task RunInitializersAsync()
-    {
-        if (IsAllInitialized)
+        public async Task WaitForAllInitializedAsync()
         {
-            return;
-        }
-
-        if (initializers != null)
-        {
-            foreach (var i in initializers)
+            while (!IsAllInitialized)
             {
-                await i.InitializeAsync();
+                await Task.Yield();
             }
         }
 
-        IsAllInitialized = true;
+        public IEnumerator WaitForAllInitializedRoutine()
+        {
+            while (!IsAllInitialized)
+            {
+                yield return null;
+            }
+        }
+
+        public async Task RunInitializersAsync()
+        {
+            if (IsAllInitialized)
+            {
+                return;
+            }
+
+            if (initializers != null)
+            {
+                foreach (var i in initializers)
+                {
+                    await i.InitializeAsync();
+                }
+            }
+
+            IsAllInitialized = true;
+        }
     }
 }

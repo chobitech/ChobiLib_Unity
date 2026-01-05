@@ -3,49 +3,52 @@ using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class AsyncInitializer : MonoBehaviour
+namespace ChobiLib.Unity
 {
-    public Func<Task> initializer;
-
-    public bool IsInitialized { get; private set; }
-
-
-
-    public void ResetInitializedState()
+    public class AsyncInitializer : MonoBehaviour
     {
-        IsInitialized = false;
-    }
+        public Func<Task> initializer;
 
-    public async Task InitializeAsync()
-    {
-        if (IsInitialized)
+        public bool IsInitialized { get; private set; }
+
+
+
+        public void ResetInitializedState()
         {
-            return;
+            IsInitialized = false;
         }
 
-        if (initializer != null)
+        public async Task InitializeAsync()
         {
-            await initializer();
+            if (IsInitialized)
+            {
+                return;
+            }
+
+            if (initializer != null)
+            {
+                await initializer();
+            }
+
+            IsInitialized = true;
         }
 
-        IsInitialized = true;
-    }
 
-
-    public async Task WaitForFinishInitializeAsync()
-    {
-        while (!IsInitialized)
+        public async Task WaitForFinishInitializeAsync()
         {
-            await Task.Yield();
+            while (!IsInitialized)
+            {
+                await Task.Yield();
+            }
         }
-    }
 
-    public IEnumerator WaitForFinishInitializeRoutine()
-    {
-        while (!IsInitialized)
+        public IEnumerator WaitForFinishInitializeRoutine()
         {
-            yield return null;
+            while (!IsInitialized)
+            {
+                yield return null;
+            }
         }
+
     }
-    
 }
