@@ -1,0 +1,8 @@
+﻿<Solution>
+  <Project Path="ChobiLibUnity.csproj" />
+  <Project Path="ChobiLibSQLite.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="ChobiLibAddressables.csproj" />
+  <Project Path="ChobiLibRealm.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+</Solution>
