@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace ChobiLib.Unity
 {
@@ -26,6 +27,8 @@ namespace ChobiLib.Unity
         }
 
         private Coroutine _textFadeInCoroutine;
+
+        private readonly List<Coroutine> _charsCoroutine = new();
 
         private void SetAllCharacterAlpha(float alpha)
         {
@@ -58,6 +61,15 @@ namespace ChobiLib.Unity
 
         public void SkipCharacterFading()
         {
+            if (_charsCoroutine.IsNotEmpty())
+            {
+                foreach (var c in _charsCoroutine)
+                {
+                    StopCoroutine(c);
+                }
+                _charsCoroutine.Clear();
+            }
+
             if (_textFadeInCoroutine != null)
             {
                 StopCoroutine(_textFadeInCoroutine);
@@ -70,6 +82,7 @@ namespace ChobiLib.Unity
 
         private IEnumerator TextFadeInRoutine(float durationSecPerChar)
         {
+            _charsCoroutine.Clear();
             _text.ForceMeshUpdate();
 
             var textInfo = _text.textInfo;
@@ -83,7 +96,10 @@ namespace ChobiLib.Unity
                 {
                     continue;
                 }
-                yield return StartCoroutine(FadeCharacter(i, durationSecPerChar));
+                var coroutine = StartCoroutine(FadeCharacter(i, durationSecPerChar));
+                _charsCoroutine.Add(coroutine);
+                yield return coroutine;
+                _charsCoroutine.Remove(coroutine);
             }
 
             _textFadeInCoroutine = null;
