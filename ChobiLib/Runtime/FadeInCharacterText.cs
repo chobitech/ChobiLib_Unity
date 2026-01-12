@@ -5,6 +5,32 @@ using System.Collections.Generic;
 
 namespace ChobiLib.Unity
 {
+    internal static class ChobiInnerTMPTextInfoExtensions
+    {
+        public static void ChangeAlphaOfCharAt(this TMP_TextInfo ti, int index, byte alpha)
+        {
+            var cInfo = ti.characterInfo[index];
+            if (!cInfo.isVisible)
+            {
+                return;
+            }
+
+            var matIndex = cInfo.materialReferenceIndex;
+            var vIndex = cInfo.vertexIndex;
+            var colors = ti.meshInfo[matIndex].colors32;
+
+            colors[vIndex].a = alpha;
+            colors[vIndex + 1].a = alpha;
+            colors[vIndex + 2].a = alpha;
+            colors[vIndex + 3].a = alpha;
+        }
+
+        public static void ChangeAlphaOfCharAt(this TMP_TextInfo ti, int index, float alpha01)
+        {
+            ti.ChangeAlphaOfCharAt(index, (byte)(byte.MaxValue * alpha01));
+        }
+    }
+
     [RequireComponent(typeof(TMP_Text))]
     public class FadeInCharacterText : MonoBehaviour
     {
@@ -39,20 +65,7 @@ namespace ChobiLib.Unity
 
             for (var i = 0; i < textInfo.characterCount; i++)
             {
-                var cInfo = textInfo.characterInfo[i];
-
-                if (!cInfo.isVisible)
-                {
-                    continue;
-                }
-
-                var matIndex = cInfo.materialReferenceIndex;
-                var vIndex = cInfo.vertexIndex;
-                var colors = textInfo.meshInfo[matIndex].colors32;
-                for (var k = 0; k < 4; k++)
-                {
-                    colors[vIndex + k].a = bAlpha;
-                }
+                textInfo.ChangeAlphaOfCharAt(i, bAlpha);
             }
 
             _text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
@@ -80,7 +93,7 @@ namespace ChobiLib.Unity
         }
 
 
-        private IEnumerator TextFadeInRoutine(float durationSecPerChar)
+        private IEnumerator TextFadeInRoutine(float durationSecPerChar, float startAlpha, float endAlpha)
         {
             _charsCoroutine.Clear();
             _text.ForceMeshUpdate();
@@ -96,7 +109,7 @@ namespace ChobiLib.Unity
                 {
                     continue;
                 }
-                var coroutine = StartCoroutine(FadeCharacter(i, durationSecPerChar));
+                var coroutine = StartCoroutine(FadeCharacter(i, durationSecPerChar, startAlpha, endAlpha));
                 _charsCoroutine.Add(coroutine);
                 yield return coroutine;
                 _charsCoroutine.Remove(coroutine);
@@ -105,7 +118,7 @@ namespace ChobiLib.Unity
             _textFadeInCoroutine = null;
         }
 
-        private IEnumerator FadeCharacter(int charIndex, float durationSec)
+        private IEnumerator FadeCharacter(int charIndex, float durationSec, float startAlpha, float endAlpha)
         {
             var textInfo = _text.textInfo;
 
@@ -119,7 +132,7 @@ namespace ChobiLib.Unity
             while (ct < durationSec)
             {
                 ct += Time.deltaTime;
-                var a = (byte)Mathf.Lerp(0, 255, ct / durationSec);
+                var a = (byte)(Mathf.Lerp(startAlpha, endAlpha, ct / durationSec) * 255);
                 colors[vIndex].a = a;
                 colors[vIndex + 1].a = a;
                 colors[vIndex + 2].a = a;
@@ -129,12 +142,12 @@ namespace ChobiLib.Unity
             }
         }
 
-        public void StartCharacterFading(float durationSecPerChar = 0.2f)
+        public void StartCharacterFading(float durationSecPerChar = 0.2f, float startAlpha = 0f, float endAlpha = 1f)
         {
             StartCharacterFading(null, durationSecPerChar);
         }
 
-        public void StartCharacterFading(string text, float durationSecPerChar = 0.2f)
+        public void StartCharacterFading(string text, float durationSecPerChar = 0.2f, float startAlpha = 0f, float endAlpha = 1f)
         {
             if (_textFadeInCoroutine != null)
             {
@@ -147,7 +160,7 @@ namespace ChobiLib.Unity
                 _text.text = text;
             }
 
-            _textFadeInCoroutine = StartCoroutine(TextFadeInRoutine(durationSecPerChar));
+            _textFadeInCoroutine = StartCoroutine(TextFadeInRoutine(durationSecPerChar, startAlpha, endAlpha));
         }
 
 
