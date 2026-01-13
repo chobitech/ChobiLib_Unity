@@ -24,6 +24,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public static SecureDbContentData CreateContentData(string json, string contentId = null, string tagString = null, int? tagInt = null)
         {
+            var cData = new SecureDbContentData()
+            {
+                HKey = ChobiLib.GenerateRandomBytes(32),
+            };
             var hk = ChobiLib.GenerateRandomBytes(32);
 
             var tOfs = DateTimeOffset.UtcNow;
