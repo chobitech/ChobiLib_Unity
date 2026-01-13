@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Codice.Client.BaseCommands.BranchExplorer;
 using Codice.CM.Common.Tree;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace ChobiLib.Unity
 {
@@ -120,8 +122,10 @@ namespace ChobiLib.Unity
         public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, WaitForSeconds waitForSeconds, UnityAction action) => mb.DelayStartCoroutine(waitForSeconds, action.ToRoutine());
         public static Coroutine DelayStartCoroutine(this MonoBehaviour mb, float waitSeconds, UnityAction action) => mb.DelayStartCoroutine(new WaitForSeconds(waitSeconds), action);
 
-        public static Task RunCoroutineAsTask(this MonoBehaviour mb, IEnumerator proc)
+        public static Task RunCoroutineAsTask(this MonoBehaviour mb, IEnumerator proc, CancellationToken token = default)
         {
+            var cToken = (token != default) ? token : mb.destroyCancellationToken;
+
             var tcs = new TaskCompletionSource<bool>();
 
             if (!mb.gameObject.activeInHierarchy)
@@ -130,35 +134,49 @@ namespace ChobiLib.Unity
                 return tcs.Task;
             }
 
-            mb.StartCoroutine(mb.CoroutineToTaskWrapper(proc, tcs));
+            mb.StartCoroutine(mb.CoroutineToTaskWrapper(proc, tcs, cToken));
             return tcs.Task;
         }
 
 
-        private static IEnumerator CoroutineToTaskWrapper(this MonoBehaviour mb, IEnumerator proc, TaskCompletionSource<bool> tcs)
+        private static IEnumerator CoroutineToTaskWrapper(this MonoBehaviour mb, IEnumerator proc, TaskCompletionSource<bool> tcs, CancellationToken token = default)
         {
-            while (true)
+            using (token.Register(() => tcs.TrySetCanceled(token)))
             {
-                object current;
-                try
+                while (true)
                 {
-                    if (!proc.MoveNext())
+                    if (token.IsCancellationRequested)
+                    {
+                        tcs.TrySetCanceled(token);
+                        yield break;
+                    }
+
+                    bool hasNext;
+
+                    try
+                    {
+                        hasNext = proc.MoveNext();
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                        yield break;
+                    }
+
+                    if (!hasNext)
                     {
                         break;
                     }
-                    current = proc.Current;
+
+                    yield return proc.Current;
                 }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                    tcs.TrySetException(ex);
-                    yield break;
-                }
-                yield return current;
+
+                tcs.TrySetResult(true);
             }
 
-            tcs.TrySetResult(true);
         }
+
+
 
 
         public static async Task RunWithCancellationTokens(this MonoBehaviour mb, Func<CancellationToken, Task> proc, UnityAction<CancellationToken> onCanceled, params CancellationToken[] customTokens)
