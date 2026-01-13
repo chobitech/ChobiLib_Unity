@@ -210,5 +210,28 @@ namespace ChobiLib.Unity
             await mb.RunWithCancellationTokens(proc, null, customTokens);
         }
 
+
+        public static async Task<T> RunOnMainThread<T>(this object obj, Func<Task<T>> asyncProc)
+        {
+            await Awaitable.MainThreadAsync();
+            try
+            {
+                return await asyncProc();
+            }
+            finally
+            {
+                await Awaitable.BackgroundThreadAsync();
+            }
+        }
+
+        public static async Task RunOnMainThread(this object obj, Func<Task> asyncProc)
+        {
+            _ = await obj.RunOnMainThread(async () =>
+            {
+                await asyncProc();
+                return false;
+            });
+        }
+
     }
 }
