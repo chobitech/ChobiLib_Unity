@@ -19,7 +19,11 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public static SecureDbContentData CreateContentData(object obj, string contentId = null, string tagString = null, int? tagInt = null)
         {
-            var json = JsonUtility.ToJson(obj);
+            return CreateContentData( JsonUtility.ToJson(obj), contentId, tagString, tagInt);
+        }
+
+        public static SecureDbContentData CreateContentData(string json, string contentId = null, string tagString = null, int? tagInt = null)
+        {
             var hk = ChobiLib.GenerateRandomBytes(32);
 
             var tOfs = DateTimeOffset.UtcNow;
@@ -40,11 +44,11 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             };
         }
 
-        public static S InstantiateFromContentData<S>(SecureDbContentData cData)
+        public static string GetJsonFromContentData(SecureDbContentData cData)
         {
             if (cData == null)
             {
-                return default;
+                return null;
             }
 
             var r = $"{cData.ContentId}\n{cData.CreateTimeOffsetUtc.Ticks}\n{Convert.ToBase64String(cData.HKey)}\n{cData.Content}";
@@ -53,10 +57,21 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             if (!ch.CompareHash(r.ConvertToByteArray(), cData.HData))
             {
                 Debug.LogWarning("SecureDbContentData hash value is not match");
+                return null;
+            }
+
+            return cData.Content;
+        }
+
+        public static S InstantiateFromContentData<S>(SecureDbContentData cData)
+        {
+            var json = GetJsonFromContentData(cData);
+            if (json == null)
+            {
                 return default;
             }
 
-            return JsonUtility.FromJson<S>(cData.Content);
+            return JsonUtility.FromJson<S>(json);
         }
 
         public static Dictionary<string, bool> SaveToDb(SQLiteConnection con, params SecureDbContentData[] cData)
