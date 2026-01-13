@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using ChobiLib.Security;
 using SQLite.Attributes;
 using UnityEngine;
@@ -76,6 +77,23 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         [Indexed]
         public DateTimeOffset CreateTimeOffsetUtc { get; set; }
+
+        public string GetJson()
+        {
+            if (CheckIsValidData())
+            {
+                return Content;
+            }
+            else
+            {
+                throw new CryptographicException("[SecureDbContentData] Verification failed: computed hash differs from the stored hash.");
+            }
+        }
+
+        public T InstantiateFromContentJson<T>()
+        {
+            return JsonUtility.FromJson<T>(GetJson());
+        }
 
 
         public bool CheckIsValidData(byte[] data = null) => new ChobiHash(HKey).CompareHash(

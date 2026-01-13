@@ -17,7 +17,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             var res = await _initTcs.Task;
             if (!res)
             {
-                Debug.LogWarning("SQlite Initialize failed");
+                ChobiSQLite.LogWarning("SQlite Initialize failed");
             }
             return res;
         }
@@ -34,13 +34,13 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 var res = checkTask.Result;
                 if (!res)
                 {
-                    Debug.LogWarning("SQlite Initialize failed");
+                    ChobiSQLite.LogWarning("SQlite Initialize failed");
                 }
                 return res;
             }
             else
             {
-                Debug.LogWarning("SQLite init wait timeout");
+                ChobiSQLite.LogWarning("SQLite init wait timeout");
                 return false;
             }
         }
@@ -79,7 +79,9 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             
             if (!KeyAvailable)
             {
-                throw new Exception("DB password is null");
+                var ex = new Exception("DB password is null");
+                ChobiSQLite.LogException(ex);
+                throw ex;
             }
 
             var h = new ChobiHash(Convert.FromBase64String(HKey)).CalcHash(Convert.FromBase64String(HSeed));
@@ -117,7 +119,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ChobiSQLite.LogException(ex);
+                throw ex;
             }
         }
 
@@ -147,8 +150,9 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
                 _initTcs.TrySetResult(false);
+                ChobiSQLite.LogException(ex);
+                throw ex;
             }
             finally
             {
