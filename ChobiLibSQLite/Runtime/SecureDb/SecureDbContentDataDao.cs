@@ -39,7 +39,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         public static S InstantiateFromDb<S>(SQLiteConnection con, string contentId)
         {
             var cData = con.Find<SecureDbContentData>(contentId);
-            return (cData != null) ? cData.InstantiateFromContentJson<S>() : default;
+            return (cData != null) ? cData.ConvertTo<S>() : default;
         }
 
         public async Task<Dictionary<string, bool>> SaveToDbAsync(params SecureDbContentData[] cData)

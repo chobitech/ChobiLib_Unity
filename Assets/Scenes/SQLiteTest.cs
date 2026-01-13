@@ -44,6 +44,7 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
 
     async void Start()
     {
+        /*
         var obj = new TTT()
         {
             s = "aaaaa--"
@@ -69,6 +70,7 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         {
             Debug.Log($"onAppQuit");
         };
+        */
 
 
 
