@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Codice.CM.Common.Tree;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -155,6 +158,56 @@ namespace ChobiLib.Unity
             }
 
             tcs.TrySetResult(true);
+        }
+
+
+        public static async Task RunWithCancellationTokens(this MonoBehaviour mb, Func<CancellationToken, Task> proc, UnityAction<CancellationToken> onCanceled, params CancellationToken[] customTokens)
+        {
+            var dToken = mb.destroyCancellationToken;
+
+            CancellationTokenSource cts = null;
+
+            if (customTokens.IsNotEmpty())
+            {
+                var tokenList = new List<CancellationToken>()
+                {
+                    dToken
+                };
+                tokenList.AddRange(customTokens);
+                cts = CancellationTokenSource.CreateLinkedTokenSource(tokenList.ToArray());
+            }
+
+            var procToken = cts?.Token ?? dToken;
+
+            try
+            {
+                await (proc?.Invoke(procToken) ?? Task.CompletedTask);
+            }
+            catch (OperationCanceledException)
+            {
+                if (mb == null || dToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                foreach (var token in customTokens)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        onCanceled?.Invoke(token);
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                cts?.Dispose();
+            }
+        }
+
+        public static async Task RunWithCancellationTokens(this MonoBehaviour mb, Func<CancellationToken, Task> proc, params CancellationToken[] customTokens)
+        {
+            await mb.RunWithCancellationTokens(proc, null, customTokens);
         }
 
     }

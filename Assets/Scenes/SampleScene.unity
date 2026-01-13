@@ -737,6 +737,7 @@ GameObject:
   - component: {fileID: 1822871634}
   - component: {fileID: 1822871633}
   - component: {fileID: 1822871635}
+  - component: {fileID: 1822871636}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -875,6 +876,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a80f547a13e69fe439ffb5719a8ed244, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FadeTextTest
+--- !u!114 &1822871636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822871631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e7cb9a8e11913943ae973ad51bbfc7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ChobiLibUnity::ChobiLib.Unity.FadingTMPText
 --- !u!1 &1991183462
 GameObject:
   m_ObjectHideFlags: 0
