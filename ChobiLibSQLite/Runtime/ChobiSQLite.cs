@@ -171,6 +171,8 @@ namespace ChobiLib.Unity.SQLite
 
             _con.BeginTransaction();
 
+            Log($"Enter Transaction Process", showLog: showDebugLog);
+
             try
             {
                 var result = func(_con);
@@ -183,15 +185,19 @@ namespace ChobiLib.Unity.SQLite
                 LogException(ex, showLog: showDebugLog);
                 throw ex;
             }
+            finally
+            {
+                Log($"Exit Transaction Process", showLog: showDebugLog);
+            }
         }
 
         public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
             CheckIsDisposed();
 
-            Log("Enter Async Transaction Process", showLog: showDebugLog);
-
             await _dbLock.WaitAsync();
+
+            Log($"Start Async Transaction Process", showLog: showDebugLog);
 
             try
             {
@@ -201,7 +207,7 @@ namespace ChobiLib.Unity.SQLite
             finally
             {
                 _dbLock.Release();
-                Log("Exit Async Transaction Process", showLog: showDebugLog);
+                Log($"Finish Async Transaction Process", showLog: showDebugLog);
             }
         }
 
@@ -236,13 +242,13 @@ namespace ChobiLib.Unity.SQLite
         {
             CheckIsDisposed();
 
-            Log("Enter Sync Transaction Process", showLog: showDebugLog);
-
             if(!_dbLock.Wait(waitTimeMs))
             {
                 LogWarning("DB lock timeout", showLog: showDebugLog);
                 return default;
             }
+
+            Log($"Start Sync Transaction Process", showLog: showDebugLog);
 
             try
             {
@@ -257,7 +263,7 @@ namespace ChobiLib.Unity.SQLite
             finally
             {
                 _dbLock.Release();
-                Log("Exit Sync Transaction Process", showLog: showDebugLog);
+                Log($"Finish Sync Transaction Process", showLog: showDebugLog);
             }
         }
 
