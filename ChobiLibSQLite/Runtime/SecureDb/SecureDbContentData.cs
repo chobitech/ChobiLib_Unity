@@ -90,7 +90,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        public T InstantiateFromContentJson<T>()
+        public T ConvertTo<T>()
         {
             return JsonUtility.FromJson<T>(GetJson());
         }

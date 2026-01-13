@@ -8,12 +8,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
     {
         public static SecureDbContentData ConvertToSecureDbContentData(this object obj, string contentId = null, string tagString = null, int? tagInt = null)
         {
-            return SecureDbContentDataDao.CreateContentData(obj, contentId, tagString, tagInt);
-        }
-
-        public static T ConvertTo<T>(this SecureDbContentData cData)
-        {
-            return SecureDbContentDataDao.InstantiateFromContentData<T>(cData);
+            return SecureDbContentData.CreateContentData(obj, contentId, tagString, tagInt);
         }
 
         public static Dictionary<string, bool> SaveSecureDbContentData(this SQLiteConnection con, IEnumerable<SecureDbContentData> cData)
