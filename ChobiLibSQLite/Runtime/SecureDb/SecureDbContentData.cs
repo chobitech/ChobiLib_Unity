@@ -1,13 +1,37 @@
 using System;
 using ChobiLib.Security;
 using SQLite.Attributes;
-using UnityEditor.UI;
+using UnityEngine;
 
 namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public class SecureDbContentData
     {
-        public static string GetJson(
+        public static SecureDbContentData CreateContentData(string json, byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
+        {
+            var hk = key ?? ChobiLib.GenerateRandomBytes(32);
+            var tOfs = DateTimeOffset.UtcNow;
+            var cid = contentId ?? Guid.NewGuid().ToString();
+            var hash = CalcHash(hk, cid, tagString, tagInt, json, tOfs);
+
+            return new()
+            {
+                ContentId = cid,
+                Content = json,
+                TagString = tagString,
+                TagInt = tagInt,
+                HKey = hk,
+                HData = hash,
+                CreateTimeOffsetUtc = tOfs,
+            };
+        }
+
+        public static SecureDbContentData CreateContentData(object obj, string contentId = null, string tagString = null, int? tagInt = null)
+        {
+            return CreateContentData(JsonUtility.ToJson(obj), contentId, tagString, tagInt);
+        }
+
+        public static string GetHashContent(
             byte[] key,
             string cid,
             string tagString,
@@ -28,9 +52,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             DateTimeOffset dtOfs
         )
         {
-            var json = GetJson(key, cid, tagString, tagInt, content, dtOfs);
+            var json = GetHashContent(key, cid, tagString, tagInt, content, dtOfs);
             return new ChobiHash(key).CalcHash(json.ConvertToByteArray());
         }
+
+
+        //--- columns
 
         [PrimaryKey]
         public string ContentId { get; set; }
@@ -41,7 +68,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         [Indexed]
         public int? TagInt { get; set; }
 
-
         public string Content { get; set; }
 
         public byte[] HKey { get; set; }
@@ -51,13 +77,44 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         [Indexed]
         public DateTimeOffset CreateTimeOffsetUtc { get; set; }
 
-        public string ToJson()
+
+        public bool CheckIsValidData(byte[] data = null) => new ChobiHash(HKey).CompareHash(
+            data ?? GetHashContent(
+                HKey,
+                ContentId,
+                TagString,
+                TagInt,
+                Content,
+                CreateTimeOffsetUtc
+            ).ConvertToByteArray(),
+            HData
+        );
+
+        public bool CheckIsValidDataWithContent(string content) => new ChobiHash(HKey).CompareHash(
+            GetHashContent(
+                HKey,
+                ContentId,
+                TagString,
+                TagInt,
+                content,
+                CreateTimeOffsetUtc
+            ).ConvertToByteArray(),
+            HData
+        );
+
+        public SecureDbContentData Copy()
         {
-            throw new NotImplementedException();
+            var scd = (SecureDbContentData)MemberwiseClone();
+            scd.HKey = (byte[])HKey.Clone();
+            scd.HData = (byte[])HData.Clone();
+            return scd;
         }
 
-        public byte[] CalcHashData() => new ChobiHash(HKey).CalcHash(ToJson().ConvertToByteArray());
-
-        public SecureDbContentData Copy() => (SecureDbContentData)MemberwiseClone();
+        public SecureDbContentData CopyWithContent(string content)
+        {
+            var scd = Copy();
+            scd.Content = content;
+            return scd;
+        }
     }
 }

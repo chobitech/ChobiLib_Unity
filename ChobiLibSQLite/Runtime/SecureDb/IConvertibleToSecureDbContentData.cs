@@ -1,0 +1,18 @@
+namespace ChobiLib.Unity.SQLite.SecureDb
+{
+    public interface IConvertibleToSecureDbContentData : IJsonable
+    {
+        public virtual SecureDbContentData ConvertToSecureDbContentData(byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
+        {
+            return SecureDbContentData.CreateContentData(
+                ToJson(),
+                key,
+                contentId,
+                tagString,
+                tagInt
+            );
+        }
+
+        
+    }
+}
