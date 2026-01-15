@@ -151,6 +151,18 @@ namespace ChobiLib.Unity
                         yield break;
                     }
 
+                    if (mb == null)
+                    {
+                        tcs.TrySetException(new MissingReferenceException($"MonoBehaviour is null"));
+                        yield break;
+                    }
+
+                    if (!mb.isActiveAndEnabled)
+                    {
+                        tcs.TrySetException(new InvalidOperationException("MonoBehaviour is not active"));
+                        yield break;
+                    }
+
                     bool hasNext;
 
                     try
