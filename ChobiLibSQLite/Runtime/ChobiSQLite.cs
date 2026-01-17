@@ -40,7 +40,7 @@ namespace ChobiLib.Unity.SQLite
         {
             if (showLog)
             {
-                Debug.LogException(new Exception($"[{tag}] {ex.Message}"));
+                Debug.LogException(ex);
             }
         }
 
@@ -123,6 +123,18 @@ namespace ChobiLib.Unity.SQLite
                 throw ex;
             }
         }
+
+        private async Task<T> RunOnAnotherThread<T>(Func<SQLiteConnection, T> func)
+        {
+            if (ChobiThreadInfo.IsInMainThread)
+            {
+                return await Task.Run(() => func(_con));
+            }
+            else
+            {
+                return func(_con);
+            }
+        }
         
         public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
@@ -136,10 +148,11 @@ namespace ChobiLib.Unity.SQLite
             }
 
             await _dbLock.WaitAsync();
+            
             try
             {
                 CheckIsDisposed();
-                return await Task.Run(() => func(_con));
+                return await RunOnAnotherThread(func);
             }
             finally
             {
@@ -150,7 +163,7 @@ namespace ChobiLib.Unity.SQLite
 
         public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
-            await WithAsyncInBackground(db =>
+            await WithAsyncInBackground<bool>(db =>
             {
                 action?.Invoke(db);
                 return false;
@@ -202,7 +215,7 @@ namespace ChobiLib.Unity.SQLite
             try
             {
                 CheckIsDisposed();
-                return await Task.Run(() => InnerTransactionProcess(func));
+                return await RunOnAnotherThread(_ => InnerTransactionProcess(func));
             }
             finally
             {
@@ -213,7 +226,7 @@ namespace ChobiLib.Unity.SQLite
 
         public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
         {
-            await WithTransactionAsyncInBackground(db =>
+            await WithTransactionAsyncInBackground<bool>(db =>
             {
                 action?.Invoke(db);
                 return false;
@@ -267,7 +280,7 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        internal void WithTransactionSync(UnityAction<SQLiteConnection> action, int waitTimeMs) => WithTransactionSync(db =>
+        internal void WithTransactionSync(UnityAction<SQLiteConnection> action, int waitTimeMs) => WithTransactionSync<bool>(db =>
         {
             action?.Invoke(db);
             return false;

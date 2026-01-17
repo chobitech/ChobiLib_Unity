@@ -8,7 +8,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public class SecureDbContentData
     {
-        public static SecureDbContentData CreateContentData(string json, byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentDataFromJson(string json, byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
         {
             var hk = key ?? ChobiLib.GenerateRandomBytes(32);
             var tOfs = DateTimeOffset.UtcNow;
@@ -27,14 +27,14 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             };
         }
 
-        public static SecureDbContentData CreateContentData(IJsonable jsonable, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentDataFromJsonable(IJsonable jsonable, byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
         {
-            return CreateContentData(jsonable.ToJson(), contentId, tagString, tagInt);
+            return CreateContentDataFromJson(jsonable.ToJson(), key, contentId, tagString, tagInt);
         }
 
-        public static SecureDbContentData CreateContentData(object obj, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentDataFromSerializable(object obj, byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
         {
-            return CreateContentData(JsonUtility.ToJson(obj), contentId, tagString, tagInt);
+            return CreateContentDataFromJson(JsonUtility.ToJson(obj), key, contentId, tagString, tagInt);
         }
 
         public static string GetHashContent(

@@ -4,7 +4,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
     {
         public virtual SecureDbContentData ConvertToSecureDbContentData(byte[] key = null, string contentId = null, string tagString = null, int? tagInt = null)
         {
-            return SecureDbContentData.CreateContentData(
+            return SecureDbContentData.CreateContentDataFromJson(
                 ToJson(),
                 key,
                 contentId,

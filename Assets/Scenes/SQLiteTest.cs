@@ -5,6 +5,8 @@ using UnityEngine;
 using ChobiLib.Unity.SQLite;
 using ChobiLib.Unity.SQLite.SecureDb;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using ChobiLib.Unity;
 
 [System.Serializable]
 public class TTT
@@ -42,19 +44,30 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         DeleteDbFile();
     }
 
-    async void Start()
+    async Task Start()
     {
         /*
+        Debug.Log($"isMainThread = {ChobiThreadInfo.IsInMainThread}");
+
+        await Task.Run(() => Debug.Log($"isMainThread = {ChobiThreadInfo.IsInMainThread}"));
+        */
+
+
+           
         var obj = new TTT()
         {
             s = "aaaaa--"
         };
+        Debug.Log($"obj = {obj}");
         
-        var cData = SecureDbContentDataDao.CreateContentData(obj);
+        
+        
+        var cData = SecureDbContentData.CreateContentDataFromSerializable(obj);
         Debug.Log(cData);
 
-        var dData = SecureDbContentDataDao.InstantiateFromContentData<TTT>(cData);
+        var dData = cData.ConvertTo<TTT>();
         Debug.Log(dData?.s);
+
 
         onAppPausedProcessInBackground += con =>
         {
@@ -70,7 +83,6 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         {
             Debug.Log($"onAppQuit");
         };
-        */
 
 
 
