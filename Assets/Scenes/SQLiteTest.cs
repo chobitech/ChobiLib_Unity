@@ -7,6 +7,8 @@ using ChobiLib.Unity.SQLite.SecureDb;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChobiLib.Unity;
+using UnityEngine.Rendering;
+using MongoDB.Bson;
 
 [System.Serializable]
 public class TTT
@@ -14,13 +16,18 @@ public class TTT
     public string s;
 }
 
-public class TestTable
+public class TestTable : ISecureDbContentData
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
         public string Value { get; set; }
-    }
+
+        [Ignore]
+        public int VVV{ get; set; }
+
+        public string SecureDbContentDataId { get; set; }
+}
 
 
 public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
@@ -46,6 +53,10 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
 
     async Task Start()
     {
+        var data =  new TestTable();
+
+        Debug.Log($"{data.ToJson()}");
+
         /*
         Debug.Log($"isMainThread = {ChobiThreadInfo.IsInMainThread}");
 
@@ -53,7 +64,8 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         */
 
 
-           
+        
+        /*
         var obj = new TTT()
         {
             s = "aaaaa--"
@@ -83,6 +95,7 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
         {
             Debug.Log($"onAppQuit");
         };
+        */
 
 
 
