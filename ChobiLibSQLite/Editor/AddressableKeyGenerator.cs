@@ -2,12 +2,12 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using System.IO;
 
 
 public static class AddressableKeyGenerator
 {
     public const int KeySizeByte = 32;
-    public const string AKey = "sk.asset";
 
     [MenuItem("Tools/ChobiLib Unity SecureDB/HKey")]
     public static void Generate()
@@ -43,7 +43,7 @@ public static class AddressableKeyGenerator
         var aSettings = AddressableAssetSettingsDefaultObject.Settings;
         var aGroup = aSettings.DefaultGroup;
         var aEntry = aSettings.CreateOrMoveEntry(guid, aGroup);
-        aEntry.address = AKey;
+        aEntry.address = Path.GetFileName(aPath);
 
         aSettings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, aEntry, true);
         AssetDatabase.SaveAssets();
