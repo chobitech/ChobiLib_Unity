@@ -5,4 +5,5 @@
   <Project Path="ChobiLibAddressables.csproj" />
   <Project Path="ChobiLibRealm.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="ChobiLibSQLite.Editor.csproj" />
 </Solution>
