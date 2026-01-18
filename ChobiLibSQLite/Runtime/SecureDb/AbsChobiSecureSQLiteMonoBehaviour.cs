@@ -133,13 +133,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
             try
             {
-                if (NoEncrypt)
+                if (!NoEncrypt)
                 {
-                    _initTcs.TrySetResult(true);
-                    return;
+                    await LoadKeys();
                 }
-
-                await LoadKeys();
                 
                 if (withOpenDb)
                 {

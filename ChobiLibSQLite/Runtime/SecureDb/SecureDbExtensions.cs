@@ -18,21 +18,20 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return res.IsNotEmpty() && res.First().Value;
         }
         
-        // string json, string contentId = null, string tagString = null, int? tagInt = null
-        public static SecureDbContentData SaveJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData SaveJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null)
         {
-            var scData = SecureDbContentData.CreateContentDataFromJson(json, contentId, tagString, tagInt);
+            var scData = SecureDbContentData.CreateContentDataFromJson(json, contentId);
             return con.SaveSecureDbContentData(scData) ? scData : null;
         }
 
-        public static SecureDbContentData SaveJsonableAsSecureDbContentData(this SQLiteConnection con, IJsonable jsonable, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData SaveJsonableAsSecureDbContentData(this SQLiteConnection con, IJsonable jsonable, string contentId = null)
         {
-            return con.SaveJsonAsSecureDbContentData(jsonable.ToJson(), contentId, tagString, tagInt);
+            return con.SaveJsonAsSecureDbContentData(jsonable.ToJson(), contentId);
         }
 
-        public static SecureDbContentData SaveSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData SaveSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null)
         {
-            return con.SaveJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId, tagString, tagInt);
+            return con.SaveJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId);
         }
 
 

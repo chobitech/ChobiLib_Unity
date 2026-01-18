@@ -1,6 +1,6 @@
 
 using System.Collections.Generic;
-using UnityEngine;
+using Newtonsoft.Json;
 
 namespace ChobiLib.Unity
 {
@@ -8,7 +8,6 @@ namespace ChobiLib.Unity
     {
         Dictionary<string, dynamic> ToMap();
 
-        public virtual string ToJson() => JsonUtility.ToJson(ToMap());
-        public virtual T Instantiate<T>() => JsonUtility.FromJson<T>(ToJson());
+        string ToJson() => JsonConvert.SerializeObject(ToMap());
     }
 }

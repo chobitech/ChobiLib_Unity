@@ -8,57 +8,53 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public class SecureDbContentData
     {
-        public static SecureDbContentData CreateContentDataFromJson(string json, string contentId = null, string tagString = null, int? tagInt = null)
+        internal static string GenerateGuidAsId() => Guid.NewGuid().ToString();
+
+        public static SecureDbContentData CreateContentDataFromJson(string json, string contentId = null)
         {
             var hk = ChobiLib.GenerateRandomBytes(32);
             var tOfs = DateTimeOffset.UtcNow;
-            var cid = contentId ?? Guid.NewGuid().ToString();
-            var hash = CalcHash(hk, cid, tagString, tagInt, json, tOfs);
+            var cid = contentId ?? GenerateGuidAsId();
+            var hash = CalcHash(hk, cid, json, tOfs);
 
             return new()
             {
                 ContentId = cid,
                 Content = json,
-                TagString = tagString,
-                TagInt = tagInt,
                 HKey = hk,
                 HData = hash,
                 CreateTimeOffsetUtc = tOfs,
             };
         }
 
-        public static SecureDbContentData CreateContentDataFromJsonable(IJsonable jsonable, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentDataFromJsonable(IJsonable jsonable, string contentId = null)
         {
-            return CreateContentDataFromJson(jsonable.ToJson(), contentId, tagString, tagInt);
+            return CreateContentDataFromJson(jsonable.ToJson(), contentId);
         }
 
-        public static SecureDbContentData CreateContentDataFromSerializable(object obj, string contentId = null, string tagString = null, int? tagInt = null)
+        public static SecureDbContentData CreateContentDataFromSerializable(object obj, string contentId = null)
         {
-            return CreateContentDataFromJson(JsonUtility.ToJson(obj), contentId, tagString, tagInt);
+            return CreateContentDataFromJson(JsonUtility.ToJson(obj), contentId);
         }
 
         public static string GetHashContent(
             byte[] key,
             string cid,
-            string tagString,
-            int? tagInt,
             string content,
             DateTimeOffset dtOfs
         )
         {
-            return $"{cid}\n{dtOfs.Ticks}\n{Convert.ToBase64String(key)}\n{tagString ?? ""}\n{tagInt ?? 0}\n{content}";
+            return $"{cid}\n{dtOfs.Ticks}\n{Convert.ToBase64String(key)}\n{content}";
         }
 
         public static byte[] CalcHash(
             byte[] key,
             string cid,
-            string tagString,
-            int? tagInt,
             string content,
             DateTimeOffset dtOfs
         )
         {
-            var json = GetHashContent(key, cid, tagString, tagInt, content, dtOfs);
+            var json = GetHashContent(key, cid, content, dtOfs);
             return new ChobiHash(key).CalcHash(json.ConvertToByteArray());
         }
 
@@ -67,12 +63,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         [PrimaryKey]
         public string ContentId { get; set; }
-
-        [Indexed]
-        public string TagString { get; set; }
-
-        [Indexed]
-        public int? TagInt { get; set; }
 
         public string Content { get; set; }
 
@@ -105,8 +95,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             data ?? GetHashContent(
                 HKey,
                 ContentId,
-                TagString,
-                TagInt,
                 Content,
                 CreateTimeOffsetUtc
             ).ConvertToByteArray(),
@@ -117,8 +105,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             GetHashContent(
                 HKey,
                 ContentId,
-                TagString,
-                TagInt,
                 content,
                 CreateTimeOffsetUtc
             ).ConvertToByteArray(),

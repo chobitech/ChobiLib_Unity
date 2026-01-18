@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using ChobiLib.Unity;
 using UnityEngine.Rendering;
 using MongoDB.Bson;
+using System;
+using System.Reflection;
+using UnityEditor.Localization.Plugins.XLIFF.V20;
 
 [System.Serializable]
 public class TTT
@@ -16,21 +19,25 @@ public class TTT
     public string s;
 }
 
-public class TestTable : ISecureDbContentData
-    {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
+public class TestTable : AbsSecureDbContentData
+{
+    [PrimaryKey, AutoIncrement]
+    public int Id { get; set; }
 
-        public string Value { get; set; }
+    public string Value { get; set; }
 
-        [Ignore]
-        public int VVV{ get; set; }
+    [Ignore]
+    public int VVV { get; set; }
 
-        public string SecureDbContentDataId { get; set; }
+    public override string SecureDbContentDataId { get; set; }
+
+    private int InnerInt { get; set; }
+
+    public float FFF { get; }
 }
 
 
-public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
+public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 {
     const string dbFileName = "sqlite_test.db";
 
@@ -39,23 +46,72 @@ public class SQLiteTest : AbsChobiSQLiteMonoBehaviour
 
     public override int DbVersion => 1;
 
-    public override void OnCreate(SQLiteConnection con)
+    private string _hSeedFilePath;
+    protected override string HSeedFilePath => _hSeedFilePath;
+
+    protected override async Task<string> LoadHKeyAsync()
     {
-        con.CreateTable<TestTable>();
+        return "";
     }
+
+    protected override Type[] GetAdditionalTableSchemes() => new Type[]
+    {
+        typeof(TestTable),
+    };
 
     void Awake()
     {
         _dbFilePath = Path.Join(Application.persistentDataPath, dbFileName);
+        _hSeedFilePath = Path.Join(Application.persistentDataPath, "test_seed_file");
 
+        Debug.Log(_dbFilePath);
+
+        NoEncrypt = true;
         DeleteDbFile();
     }
 
     async Task Start()
     {
+        var tt = new TestTable()
+        {
+            Value = "a",
+            VVV = 6,
+        };
+
+        await InitDb();
+
+        var scd = await WithTransactionAsyncInBackground(db =>
+        {
+            var scd = db.InsertAbsSecureDbContentData(tt);
+            return scd;
+        });
+
+        Debug.Log($"content ID = {scd.ContentId}");
+
+        var rData = await WithTransactionAsyncInBackground(db =>
+        {
+            return db.LoadAbsSecureDbContentData<TestTable>(scd.ContentId);
+        });
+
+        Debug.Log(rData);
+
+        /*
+        var tt = typeof(TestTable);
+
+        var props = tt.GetProperties();
+
+        foreach (var p in props)
+        {
+            var isIgnore = p.IsDefined(typeof(SQLite.Attributes.IgnoreAttribute), true);
+            Debug.Log($"{p.Name}: canRead = {p.CanRead}, canWrite = {p.CanWrite}, {isIgnore}");
+        }
+        */
+
+        /*
         var data =  new TestTable();
 
         Debug.Log($"{data.ToJson()}");
+        */
 
         /*
         Debug.Log($"isMainThread = {ChobiThreadInfo.IsInMainThread}");
