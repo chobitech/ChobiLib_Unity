@@ -1,4 +1,7 @@
+
+/*
 using UnityEngine;
+
 
 namespace ChobiLib.Unity
 {
@@ -7,3 +10,4 @@ namespace ChobiLib.Unity
         string ToJson() => JsonUtility.ToJson(this);
     }
 }
+*/

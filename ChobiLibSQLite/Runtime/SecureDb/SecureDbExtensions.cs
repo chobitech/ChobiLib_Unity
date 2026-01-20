@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Cryptography;
 using SqlCipher4Unity3D;
 using UnityEngine;
 
@@ -8,6 +6,65 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public static class SecureDbExtensions
     {
+        //--- control SecureDbContentData
+
+        //--- insert
+        public static SecureDbContentData InsertJsonAsSecureDbContentData<T>(this SQLiteConnection con, string json, string contentId = null, bool insertOrReplace = true)
+        {
+            var scd = SecureDbContentData.CreateContentDataFromJson(json, contentId);
+            var res = insertOrReplace ? con.InsertOrReplace(scd) : con.Insert(scd);
+            return (res > 0) ? scd : throw SQLiteException.New(SQLite3.Result.Error, "SecureDbContentData insert failed");
+        }
+
+        public static SecureDbContentData InsertSerializableAsSecureDbContentData<T>(this SQLiteConnection con, object obj, string contentId = null, bool insertOrReplace = true)
+        {
+            return con.InsertJsonAsSecureDbContentData<T>(JsonUtility.ToJson(obj), contentId, insertOrReplace);
+        }
+
+        //--- update
+        public static bool UpdateJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null)
+        {
+            var scd = SecureDbContentData.CreateContentDataFromJson(json, contentId);
+            return con.Update(scd) > 0;
+        }
+
+        public static bool UpdateSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null)
+        {
+            return con.UpdateJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId);
+        }
+
+        //--- delete
+        public static bool DeleteSecureDbContentData(this SQLiteConnection con, string contentId)
+        {
+            return con.Delete<SecureDbContentData>(contentId) > 0;
+        }
+
+
+
+        //--- load
+        public static SecureDbContentData LoadSecureDbContentData(this SQLiteConnection con, string contentId)
+        {
+            var scd = con.Find<SecureDbContentData>(contentId);
+            if (scd.CheckIsValidData())
+            {
+                return scd;
+            }
+            else
+            {
+                throw new CryptographicException("SecureDbContentData hash is invalid");
+            }
+        }
+
+        public static T LoadFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
+        {
+            var scd = con.LoadSecureDbContentData(contentId);
+            return JsonUtility.FromJson<T>(scd.Content);
+        }
+
+
+
+
+        /*
         public static Dictionary<string, bool> SaveSecureDbContentData(this SQLiteConnection con, IEnumerable<SecureDbContentData> cData)
         {
             return SecureDbContentDataDao.SaveToDb(con, cData.ToArray());
@@ -48,5 +105,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             value = SecureDbContentDataDao.InstantiateFromDb<T>(con, contentId);
             return !EqualityComparer<T>.Default.Equals(value, default);
         }
+        */
     }
 }

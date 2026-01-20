@@ -35,7 +35,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                         p.SetMethod != null &&
                         p.GetMethod.IsPublic &&
                         p.SetMethod.IsPublic &&
-                    !p.IsDefined(IgnoreAttributeType, inherit: true)
+                        !p.IsDefined(IgnoreAttributeType, inherit: true)
                     );
 
                 pData = new()
@@ -51,28 +51,26 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         }
 
         public static InnerTypeAndPropertyNameData GetProperties<T>() => GetProperties(typeof(T));
+
+        public static Dictionary<string, dynamic> GetValuesMap(Type t, object obj)
+        {
+            var props = GetProperties(t);
+            var res = new Dictionary<string, dynamic>();
+            foreach (var p in props.propertyList)
+            {
+                res[p.Name] = p.GetValue(obj);
+            }
+            return res;
+        }
     }
 
-    public abstract class AbsSecureDbContentData : IUnityJsonable
+    public abstract class AbsSecureDbContentData
     {
         public abstract string SecureDbContentDataId { get; set; }
 
-        public virtual Dictionary<string, dynamic> ToMap()
-        {
-            var pRes = InnerSecureDbContentDataManager.GetProperties(GetType());
-            var map = new Dictionary<string, dynamic>();
-            foreach (var p in pRes.propertyList)
-            {
-                map[p.Name] = p.GetValue(this);
-            }
-            return map;
-        }
+        public virtual Dictionary<string, dynamic> ToMap() => InnerSecureDbContentDataManager.GetValuesMap(GetType(), this);
 
-        public string ToJson()
-        {
-            var map = ToMap();
-            return JsonConvert.SerializeObject(map);
-        }
+        public string ToJson() => JsonConvert.SerializeObject(ToMap());
     }
 
     public static class AbsSecureDbContentDataExtensions
@@ -103,10 +101,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return scd;
         }
 
-        public static int DeleteAbsSecureDbContentData<T>(this SQLiteConnection con, string contentId) where T : AbsSecureDbContentData, new()
+        public static int DeleteAbsSecureDbContentData<T>(this SQLiteConnection con, T absData) where T : AbsSecureDbContentData, new()
         {
-            con.Delete<SecureDbContentData>(contentId);
-            var data = con.Table<T>().Where(d => d.SecureDbContentDataId == contentId);
+            var cid = absData.SecureDbContentDataId;
+            con.Delete<SecureDbContentData>(cid);
+
+            var data = con.Table<T>().Where(d => d.SecureDbContentDataId == cid);
             var ct = 0;
             foreach (var d in data)
             {
@@ -126,16 +126,22 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
             if (scd == null || data == null)
             {
-                return default;
+                return null;
             }
 
             var json = data.ToJson();
             if (!scd.CheckIsValidDataWithContent(data.ToJson()))
             {
-                return default;
+                return null;
             }
 
             return data;
+        }
+
+        public static bool TryLoadAbsSecureContentData<T>(this SQLiteConnection con, string contentId, out T outData) where T : AbsSecureDbContentData, new()
+        {
+            outData = con.LoadAbsSecureDbContentData<T>(contentId);
+            return outData != null;
         }
     }
 

@@ -1,19 +1,9 @@
 using System.IO;
-using SqlCipher4Unity3D;
 using SQLite.Attributes;
 using UnityEngine;
-using ChobiLib.Unity.SQLite;
 using ChobiLib.Unity.SQLite.SecureDb;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using ChobiLib.Unity;
-using UnityEngine.Rendering;
-using MongoDB.Bson;
 using System;
-using System.Reflection;
-using UnityEditor.Localization.Plugins.XLIFF.V20;
-using Newtonsoft.Json;
-using ChobiLib.Unity.Serializables;
 
 public class TestTable : AbsSecureDbContentData
 {
@@ -68,8 +58,28 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 
     async Task Start()
     {
-        var md = ChobiGameMetaData.CreateNew();
-        Debug.Log(JsonUtility.ToJson(md));
+        await InitDb();
+
+        var tt = new TestTable()
+        {
+            Value = "666",
+        };
+        Debug.Log(tt.ToJson());
+
+        var cid = await WithTransactionAsyncInBackground(db =>
+        {
+            var d = db.InsertAbsSecureDbContentData(tt);
+            return d.ContentId;
+        });
+
+        Debug.Log(cid);
+
+        var reData = await WithTransactionAsyncInBackground(db =>
+        {
+            return db.LoadAbsSecureDbContentData<TestTable>(cid);
+        });
+        Debug.Log(reData);
+        
 
         /*
         var test = new TTT();
