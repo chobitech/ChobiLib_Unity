@@ -46,6 +46,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         }
 
         private bool _keyInitializeFinished;
+        private bool _isRunningInitDb;
+
+        private bool IsInitDbNotExecute => !_keyInitializeFinished && !_isRunningInitDb;
+
         public bool KeyAvailable => HKey != null && HSeed != null;
 
         protected abstract string HSeedFilePath { get; }
@@ -131,6 +135,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 return;
             }
 
+            _isRunningInitDb = true;
+
             try
             {
                 if (!NoEncrypt)
@@ -153,12 +159,24 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
             finally
             {
+                _isRunningInitDb = false;
                 _keyInitializeFinished = true;
+            }
+        }
+
+        private async Task ExecInitDb()
+        {
+            if (IsInitDbNotExecute)
+            {
+                ChobiSQLite.LogWarning("ChobiSecureSQLite not initialized, so run InitDb()");
+                await InitDb();
             }
         }
 
         public override async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
+            await ExecInitDb();
+
             if (!await WaitForSQLiteInitialized())
             {
                 return default;
@@ -169,6 +187,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
         {
+            await ExecInitDb();
+
             if (!await WaitForSQLiteInitialized())
             {
                 return default;
