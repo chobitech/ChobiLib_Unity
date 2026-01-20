@@ -160,6 +160,29 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             outData = con.LoadAbsSecureDbContentData<T>(contentId);
             return outData != null;
         }
+
+
+
+
+        public static List<T> LoadAbsSecureDbContentData<T>(this TableQuery<T> query) where T : AbsSecureDbContentData, new()
+        {
+            var dataSet = from q in query
+                join c in query.Connection.Table<SecureDbContentData>()
+                on q.SecureDbContentDataId equals c.ContentId
+                select (c, q);
+            
+            var resList = new List<T>();
+
+            foreach (var d in dataSet)
+            {
+                if (d.c.CheckIsValidDataWithContent(d.q.ToJson()))
+                {
+                    resList.Add(d.q);
+                }
+            }
+
+            return resList;
+        }
     }
 
 }
