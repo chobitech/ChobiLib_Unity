@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SqlCipher4Unity3D;
@@ -39,6 +40,13 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         public static T LoadFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
         {
             return SecureDbContentDataDao.InstantiateFromDb<T>(con, contentId);
+        }
+
+
+        public static bool TryLoadFromSecureContentData<T>(this SQLiteConnection con, string contentId, out T value)
+        {
+            value = SecureDbContentDataDao.InstantiateFromDb<T>(con, contentId);
+            return !EqualityComparer<T>.Default.Equals(value, default);
         }
     }
 }
