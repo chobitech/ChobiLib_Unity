@@ -104,51 +104,5 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             var sql = $"DELETE FROM {nameof(SecureDbContentData)} WHERE {nameof(SecureDbContentData.Content)} IS NULL AND {nameof(SecureDbContentData.ContentId)} NOT IN (SELECT {AbsSecureDbContentData.ContentIdColumnName} FROM {con.GetMapping<T>().TableName})";
             return con.Execute(sql);
         }
-
-
-
-
-        /*
-        public static Dictionary<string, bool> SaveSecureDbContentData(this SQLiteConnection con, IEnumerable<SecureDbContentData> cData)
-        {
-            return SecureDbContentDataDao.SaveToDb(con, cData.ToArray());
-        }
-
-        public static bool SaveSecureDbContentData(this SQLiteConnection con, SecureDbContentData scData)
-        {
-            var res = SecureDbContentDataDao.SaveToDb(con, new SecureDbContentData[] { scData });
-            return res.IsNotEmpty() && res.First().Value;
-        }
-        
-        public static SecureDbContentData SaveJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null)
-        {
-            var scData = SecureDbContentData.CreateContentDataFromJson(json, contentId);
-            return con.SaveSecureDbContentData(scData) ? scData : null;
-        }
-
-        public static SecureDbContentData SaveJsonableAsSecureDbContentData(this SQLiteConnection con, IUnityJsonable jsonable, string contentId = null)
-        {
-            return con.SaveJsonAsSecureDbContentData(jsonable.ToJson(), contentId);
-        }
-
-        public static SecureDbContentData SaveSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null)
-        {
-            return con.SaveJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId);
-        }
-
-
-
-        public static T LoadFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
-        {
-            return SecureDbContentDataDao.InstantiateFromDb<T>(con, contentId);
-        }
-
-
-        public static bool TryLoadFromSecureContentData<T>(this SQLiteConnection con, string contentId, out T value)
-        {
-            value = SecureDbContentDataDao.InstantiateFromDb<T>(con, contentId);
-            return !EqualityComparer<T>.Default.Equals(value, default);
-        }
-        */
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using SqlCipher4Unity3D;
 using SQLite.Attributes;
 
@@ -66,13 +67,27 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
     public abstract class AbsSecureDbContentData
     {
+        private class JsonKeySorter : DefaultContractResolver
+        {
+            protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+            {
+                return base.CreateProperties(type, memberSerialization)
+                    .OrderBy(p => p.PropertyName).ToList();
+            }
+        }
+
+        private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings()
+        {
+            ContractResolver = new JsonKeySorter(),
+        };
+
         public const string ContentIdColumnName = "SecureDbContentDataId";
 
         public abstract string SecureDbContentDataId { get; set; }
 
         public virtual Dictionary<string, dynamic> ToMap() => InnerSecureDbContentDataManager.GetValuesMap(GetType(), this);
 
-        public string ToJson() => JsonConvert.SerializeObject(ToMap());
+        public string ToJson() => JsonConvert.SerializeObject(ToMap(), serializerSettings);
     }
 
     public static class AbsSecureDbContentDataExtensions
