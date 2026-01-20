@@ -53,7 +53,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         public static InnerTypeAndPropertyNameData GetProperties<T>() => GetProperties(typeof(T));
     }
 
-    public abstract class AbsSecureDbContentData : IJsonable
+    public abstract class AbsSecureDbContentData : IUnityJsonable
     {
         public abstract string SecureDbContentDataId { get; set; }
 

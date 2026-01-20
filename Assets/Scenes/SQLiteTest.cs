@@ -12,12 +12,8 @@ using MongoDB.Bson;
 using System;
 using System.Reflection;
 using UnityEditor.Localization.Plugins.XLIFF.V20;
-
-[System.Serializable]
-public class TTT
-{
-    public string s;
-}
+using Newtonsoft.Json;
+using ChobiLib.Unity.Serializables;
 
 public class TestTable : AbsSecureDbContentData
 {
@@ -72,6 +68,18 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 
     async Task Start()
     {
+        var md = ChobiGameMetaData.CreateNew();
+        Debug.Log(JsonUtility.ToJson(md));
+
+        /*
+        var test = new TTT();
+
+        Debug.Log(JsonUtility.ToJson(test));
+        Debug.Log(JsonConvert.SerializeObject(test));
+        */
+
+
+        /*
         var tt = new TestTable()
         {
             Value = "a",
@@ -94,6 +102,7 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
         });
 
         Debug.Log(rData);
+        */
 
         /*
         var tt = typeof(TestTable);

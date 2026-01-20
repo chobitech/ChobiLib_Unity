@@ -24,7 +24,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return con.SaveSecureDbContentData(scData) ? scData : null;
         }
 
-        public static SecureDbContentData SaveJsonableAsSecureDbContentData(this SQLiteConnection con, IJsonable jsonable, string contentId = null)
+        public static SecureDbContentData SaveJsonableAsSecureDbContentData(this SQLiteConnection con, IUnityJsonable jsonable, string contentId = null)
         {
             return con.SaveJsonAsSecureDbContentData(jsonable.ToJson(), contentId);
         }

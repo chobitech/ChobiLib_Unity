@@ -27,10 +27,12 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             };
         }
 
-        public static SecureDbContentData CreateContentDataFromJsonable(IJsonable jsonable, string contentId = null)
+        /*
+        public static SecureDbContentData CreateContentDataFromUnityJsonable(IUnityJsonable jsonable, string contentId = null)
         {
             return CreateContentDataFromJson(jsonable.ToJson(), contentId);
         }
+        */
 
         public static SecureDbContentData CreateContentDataFromSerializable(object obj, string contentId = null)
         {
