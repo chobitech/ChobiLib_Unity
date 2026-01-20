@@ -55,10 +55,39 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
+        public static bool TryLoadSecureDbContentData(this SQLiteConnection con, string contentId, out SecureDbContentData scData)
+        {
+            try
+            {
+                scData = con.LoadSecureDbContentData(contentId);
+                return true;
+            }
+            catch
+            {
+                scData = null;
+                return false;
+            }
+        }
+
+
         public static T LoadFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
         {
             var scd = con.LoadSecureDbContentData(contentId);
             return JsonUtility.FromJson<T>(scd.Content);
+        }
+
+        public static bool TryLoadFromSecureDbContentData<T>(this SQLiteConnection con, string contentId, out T outData)
+        {
+            try
+            {
+                outData = con.LoadFromSecureDbContentData<T>(contentId);
+                return true;
+            }
+            catch
+            {
+                outData = default;
+                return false;
+            }
         }
 
 
