@@ -9,16 +9,16 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         //--- control SecureDbContentData
 
         //--- insert
-        public static SecureDbContentData InsertJsonAsSecureDbContentData<T>(this SQLiteConnection con, string json, string contentId = null, bool insertOrReplace = true)
+        public static SecureDbContentData InsertJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null, bool insertOrReplace = true)
         {
             var scd = SecureDbContentData.CreateContentDataFromJson(json, contentId);
             var res = insertOrReplace ? con.InsertOrReplace(scd) : con.Insert(scd);
             return (res > 0) ? scd : throw SQLiteException.New(SQLite3.Result.Error, "SecureDbContentData insert failed");
         }
 
-        public static SecureDbContentData InsertSerializableAsSecureDbContentData<T>(this SQLiteConnection con, object obj, string contentId = null, bool insertOrReplace = true)
+        public static SecureDbContentData InsertSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null, bool insertOrReplace = true)
         {
-            return con.InsertJsonAsSecureDbContentData<T>(JsonUtility.ToJson(obj), contentId, insertOrReplace);
+            return con.InsertJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId, insertOrReplace);
         }
 
         //--- update
