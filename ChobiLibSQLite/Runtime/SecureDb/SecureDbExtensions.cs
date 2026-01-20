@@ -22,13 +22,13 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         }
 
         //--- update
-        public static bool UpdateJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId = null)
+        public static bool UpdateJsonAsSecureDbContentData(this SQLiteConnection con, string json, string contentId)
         {
             var scd = SecureDbContentData.CreateContentDataFromJson(json, contentId);
             return con.Update(scd) > 0;
         }
 
-        public static bool UpdateSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId = null)
+        public static bool UpdateSerializableAsSecureDbContentData(this SQLiteConnection con, object obj, string contentId)
         {
             return con.UpdateJsonAsSecureDbContentData(JsonUtility.ToJson(obj), contentId);
         }
