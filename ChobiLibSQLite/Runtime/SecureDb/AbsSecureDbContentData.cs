@@ -66,6 +66,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
     public abstract class AbsSecureDbContentData
     {
+        public const string ContentIdColumnName = "SecureDbContentDataId";
+
         public abstract string SecureDbContentDataId { get; set; }
 
         public virtual Dictionary<string, dynamic> ToMap() => InnerSecureDbContentDataManager.GetValuesMap(GetType(), this);
@@ -81,7 +83,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             con.Insert(data);
 
             var json = data.ToJson();
-            var scd = SecureDbContentData.CreateContentDataFromJson(json, cid);
+            var scd = SecureDbContentData.CreateContentDataFromJson(json, cid, true);
 
             con.Insert(scd);
 
@@ -94,7 +96,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             con.Update(data);
 
             var json = data.ToJson();
-            var scd = SecureDbContentData.CreateContentDataFromJson(json, cid);
+            var scd = SecureDbContentData.CreateContentDataFromJson(json, cid, true);
 
             con.Update(scd);
 

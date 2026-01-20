@@ -66,6 +66,10 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
     {
         await InitDb();
 
+        var vacuumed = await WithTransactionAsyncInBackground(db => db.VacuumUnusedSecureDbContentData<TestTable>());
+        Debug.Log($"v = {vacuumed}");
+
+        /*
         var stData = new STData()
         {
             s = "vffff"
@@ -83,8 +87,8 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
             return db.UpdateSerializableAsSecureDbContentData(stData, scd.ContentId);
         });
         Debug.Log(res);
+        */
 
-        /*
 
         var tt = new TestTable()
         {
@@ -105,6 +109,5 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
             return db.LoadAbsSecureDbContentData<TestTable>(cid);
         });
         Debug.Log(reData);
-        */
     }
 }

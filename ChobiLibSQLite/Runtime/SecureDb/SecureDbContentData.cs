@@ -10,7 +10,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
     {
         internal static string GenerateGuidAsId() => Guid.NewGuid().ToString();
 
-        public static SecureDbContentData CreateContentDataFromJson(string json, string contentId = null)
+        public static SecureDbContentData CreateContentDataFromJson(string json, string contentId = null, bool setContentToNull = false)
         {
             var hk = ChobiLib.GenerateRandomBytes(32);
             var tOfs = DateTimeOffset.UtcNow;
@@ -20,23 +20,16 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return new()
             {
                 ContentId = cid,
-                Content = json,
+                Content = setContentToNull ? null : json,
                 HKey = hk,
                 HData = hash,
                 CreateTimeOffsetUtc = tOfs,
             };
         }
 
-        /*
-        public static SecureDbContentData CreateContentDataFromUnityJsonable(IUnityJsonable jsonable, string contentId = null)
+        public static SecureDbContentData CreateContentDataFromSerializable(object obj, string contentId = null, bool setContentToNull = false)
         {
-            return CreateContentDataFromJson(jsonable.ToJson(), contentId);
-        }
-        */
-
-        public static SecureDbContentData CreateContentDataFromSerializable(object obj, string contentId = null)
-        {
-            return CreateContentDataFromJson(JsonUtility.ToJson(obj), contentId);
+            return CreateContentDataFromJson(JsonUtility.ToJson(obj), contentId, setContentToNull);
         }
 
         public static string GetHashContent(
