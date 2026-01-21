@@ -66,7 +66,7 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 
     async Task Start()
     {
-        await InitDb();
+        //await InitDb();
 
         var vacuumed = await WithTransactionAsyncInBackgroundThread(db => db.VacuumUnusedSecureDbContentData<TestTable>());
         Debug.Log($"v = {vacuumed}");

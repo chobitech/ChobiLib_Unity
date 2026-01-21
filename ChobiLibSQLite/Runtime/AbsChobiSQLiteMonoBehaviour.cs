@@ -1,9 +1,6 @@
-using System;
-using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SqlCipher4Unity3D;
-using UnityEngine;
-using UnityEngine.Events;
 
 namespace ChobiLib.Unity.SQLite
 {
@@ -17,11 +14,10 @@ namespace ChobiLib.Unity.SQLite
 
         public virtual bool EnableForeignKey => true;
 
-        protected override ChobiSQLite OpenChobiSQLite()
+        protected override async Task<ChobiSQLite> OpenChobiSQLite(CancellationToken token = default)
         {
             return new ChobiSQLite(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, ShowDebugLog);
         }
-
 
         public virtual void OnCreate(SQLiteConnection con)
         {

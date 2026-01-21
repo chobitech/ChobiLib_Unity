@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework.Constraints;
 using SqlCipher4Unity3D;
 using UnityEngine;
 using UnityEngine.Events;
@@ -68,19 +66,30 @@ namespace ChobiLib.Unity.SQLite
 
         public bool showDebugLog = true;
 
+        public readonly bool enableForeignKey;
 
-        public ChobiSQLite(string dbFilePath, int dbVersion, string password = null, bool enableForeignKey = true, ISQLiteInitializer initializer = null, bool showDebugLog = true)
+        public readonly ISQLiteInitializer initializer;
+
+
+        public ChobiSQLite(
+            string dbFilePath,
+            int dbVersion,
+            string password = null,
+            bool enableForeignKey = true,
+            ISQLiteInitializer initializer = null,
+            bool showDebugLog = true
+        )
         {
             this.dbFilePath = dbFilePath;
             this.dbVersion = dbVersion;
             this.showDebugLog = showDebugLog;
+            this.enableForeignKey = enableForeignKey;
+            this.initializer = initializer;
 
             _con = new SQLiteConnection(
                 databasePath: dbFilePath,
                 password: password
             );
-
-            Debug.Log($"_con = {_con}");
 
             if (enableForeignKey)
             {
