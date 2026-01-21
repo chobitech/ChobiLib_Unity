@@ -43,6 +43,43 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
+
+        public static async Task<ChobiSQLite> CreateInstanceWithPassword(
+            string dbFilePath,
+            int dbVersion,
+            Func<Task<string>> pwLoader,
+            bool enableForeignKey = true,
+            ISQLiteInitializer initializer = null,
+            bool showDebugLog = true,
+            CancellationToken token = default
+        )
+        {
+            token.ThrowIfCancellationRequested();
+            var pw = await pwLoader?.Invoke();
+            token.ThrowIfCancellationRequested();
+            return new ChobiSQLite(dbFilePath, dbVersion, pw, enableForeignKey, initializer, showDebugLog);
+        }
+
+        public static async Task<ChobiSQLite> CreateInstanceWithLoadingSQLiteKey(
+            string dbFilePath,
+            int dbVersion,
+            string hkAddr,
+            string hsFilePath,
+            bool enableForeignKey = true,
+            ISQLiteInitializer initializer = null,
+            bool showDebugLog = true,
+            CancellationToken token = default
+        ) => await CreateInstanceWithPassword(
+            dbFilePath,
+            dbVersion,
+            async () => (await ChobiSQLiteKey.LoadKeyData(hkAddr, hsFilePath, token))?.GetKeyString(),
+            enableForeignKey,
+            initializer,
+            showDebugLog,
+            token
+        );
+
+
         public interface ISQLiteInitializer
         {
             void OnCreate(SQLiteConnection connection) { }
@@ -121,6 +158,17 @@ namespace ChobiLib.Unity.SQLite
             }
 
             Log($"Create and open \"{dbFilePath}\"", showLog: showDebugLog);
+        }
+
+        public ChobiSQLite(
+            string dbFilePath,
+            int dbVersion,
+            ChobiSQLiteKey sqLiteKey,
+            bool enableForeignKey = true,
+            ISQLiteInitializer initializer = null,
+            bool showDebugLog = true
+        ) : this(dbFilePath, dbVersion, sqLiteKey?.GetKeyString(), enableForeignKey, initializer, showDebugLog)
+        {
         }
 
 
