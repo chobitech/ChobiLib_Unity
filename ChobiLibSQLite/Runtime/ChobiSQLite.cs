@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework.Constraints;
 using SqlCipher4Unity3D;
 using UnityEngine;
 using UnityEngine.Events;
@@ -44,7 +45,6 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-
         public interface ISQLiteInitializer
         {
             void OnCreate(SQLiteConnection connection) { }
@@ -53,8 +53,7 @@ namespace ChobiLib.Unity.SQLite
             public virtual void OnOpen(SQLiteConnection connection) { }
         }
 
-        public static string GetDbPathInPersistentData(string fileName) => Path.Join(Application.persistentDataPath, fileName);
-
+        
         private SQLiteConnection _con;
 
         public readonly string dbFilePath;
@@ -80,6 +79,8 @@ namespace ChobiLib.Unity.SQLite
                 databasePath: dbFilePath,
                 password: password
             );
+
+            Debug.Log($"_con = {_con}");
 
             if (enableForeignKey)
             {
@@ -124,11 +125,11 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        private async Task<T> RunOnAnotherThread<T>(Func<SQLiteConnection, T> func)
+        private async Task<T> RunOnBgThread<T>(Func<SQLiteConnection, T> func, CancellationToken token)
         {
-            if (ChobiThreadInfo.IsInMainThread)
+            if (ChobiUnityThread.IsInMainThread)
             {
-                return await Task.Run(() => func(_con));
+                return await ChobiUnityThread.RunOnBackgroundThreadAsync(() => func(_con), token);
             }
             else
             {
@@ -136,7 +137,10 @@ namespace ChobiLib.Unity.SQLite
             }
         }
         
-        public async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        public async Task<T> WithAsyncInBackground<T>(
+            Func<SQLiteConnection, T> func,
+            CancellationToken token = default
+        )
         {
             CheckIsDisposed();
 
@@ -147,12 +151,12 @@ namespace ChobiLib.Unity.SQLite
                 return default;
             }
 
-            await _dbLock.WaitAsync();
+            await _dbLock.WaitAsync(token);
             
             try
             {
                 CheckIsDisposed();
-                return await RunOnAnotherThread(func);
+                return await RunOnBgThread(func, token);
             }
             finally
             {
@@ -161,16 +165,19 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
+        public async Task WithAsyncInBackground(
+            UnityAction<SQLiteConnection> action,
+            CancellationToken token = default
+        )
         {
             await WithAsyncInBackground<bool>(db =>
             {
                 action?.Invoke(db);
                 return false;
-            });
+            }, token);
         }
 
-        private T InnerTransactionProcess<T>(Func<SQLiteConnection, T> func)
+        private T InnerTransactionProcess<T>(Func<SQLiteConnection, T> func, CancellationToken token)
         {
             if (func == null)
             {
@@ -188,7 +195,12 @@ namespace ChobiLib.Unity.SQLite
 
             try
             {
+                token.ThrowIfCancellationRequested();
+
                 var result = func(_con);
+
+                token.ThrowIfCancellationRequested();
+                
                 _con.Commit();
                 return result;
             }
@@ -204,18 +216,21 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        public async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        public async Task<T> WithTransactionAsyncInBackground<T>(
+            Func<SQLiteConnection, T> func,
+            CancellationToken token = default
+        )
         {
             CheckIsDisposed();
 
-            await _dbLock.WaitAsync();
+            await _dbLock.WaitAsync(token);
 
             Log($"Start Async Transaction Process", showLog: showDebugLog);
 
             try
             {
                 CheckIsDisposed();
-                return await RunOnAnotherThread(_ => InnerTransactionProcess(func));
+                return await RunOnBgThread(_ => InnerTransactionProcess(func, token), token);
             }
             finally
             {
@@ -224,13 +239,16 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
+        public async Task WithTransactionAsyncInBackground(
+            UnityAction<SQLiteConnection> action,
+            CancellationToken token = default
+        )
         {
             await WithTransactionAsyncInBackground<bool>(db =>
             {
                 action?.Invoke(db);
                 return false;
-            });
+            }, token);
         }
 
         public void Dispose()
@@ -251,11 +269,15 @@ namespace ChobiLib.Unity.SQLite
             Log($"Disposed", showLog: showDebugLog);
         }
 
-        internal T WithTransactionSync<T>(Func<SQLiteConnection, T> func, int waitTimeMs)
+        internal T WithTransactionSync<T>(
+            Func<SQLiteConnection, T> func,
+            int waitTimeMs,
+            CancellationToken token = default
+        )
         {
             CheckIsDisposed();
 
-            if(!_dbLock.Wait(waitTimeMs))
+            if(!_dbLock.Wait(waitTimeMs, token))
             {
                 LogWarning("DB lock timeout", showLog: showDebugLog);
                 return default;
@@ -266,7 +288,7 @@ namespace ChobiLib.Unity.SQLite
             try
             {
                 CheckIsDisposed();
-                return InnerTransactionProcess(func);
+                return InnerTransactionProcess(func, token);
             }
             catch (Exception ex)
             {
@@ -280,10 +302,14 @@ namespace ChobiLib.Unity.SQLite
             }
         }
 
-        internal void WithTransactionSync(UnityAction<SQLiteConnection> action, int waitTimeMs) => WithTransactionSync<bool>(db =>
+        internal void WithTransactionSync(
+            UnityAction<SQLiteConnection> action,
+            int waitTimeMs,
+            CancellationToken token = default
+        ) => WithTransactionSync<bool>(db =>
         {
             action?.Invoke(db);
             return false;
-        }, waitTimeMs);
+        }, waitTimeMs, token);
     }
 }

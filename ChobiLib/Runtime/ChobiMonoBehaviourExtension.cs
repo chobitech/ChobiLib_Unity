@@ -241,6 +241,7 @@ namespace ChobiLib.Unity
         }
 
 
+        /*
         public static async Task<T> RunOnMainThread<T>(this object obj, Func<Task<T>> asyncProc)
         {
             await Awaitable.MainThreadAsync();
@@ -262,6 +263,7 @@ namespace ChobiLib.Unity
                 return false;
             });
         }
+        */
 
     }
 }

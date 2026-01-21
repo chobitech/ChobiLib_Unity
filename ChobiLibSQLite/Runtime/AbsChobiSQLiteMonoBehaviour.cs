@@ -7,24 +7,20 @@ using UnityEngine.Events;
 
 namespace ChobiLib.Unity.SQLite
 {
-    public abstract class AbsChobiSQLiteMonoBehaviour : MonoBehaviour, ChobiSQLite.ISQLiteInitializer
+    public abstract class AbsChobiSQLiteMonoBehaviour : AbsChobiSQLiteHolderBehaviour, ChobiSQLite.ISQLiteInitializer
     {
 
         public abstract string DbFilePath { get; }
         public abstract int DbVersion { get; }
 
-        public virtual string WorkerThreadName { get; }
-
         public virtual string DbPassword { get; } = null;
 
         public virtual bool EnableForeignKey => true;
 
-        [SerializeField]
-        private bool showDebugLog = true;
-
-        public UnityAction<SQLiteConnection> onAppQuitProcessInBackground;
-
-        public UnityAction<SQLiteConnection> onAppPausedProcessInBackground;
+        protected override ChobiSQLite OpenChobiSQLite()
+        {
+            return new ChobiSQLite(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, ShowDebugLog);
+        }
 
 
         public virtual void OnCreate(SQLiteConnection con)
@@ -32,87 +28,9 @@ namespace ChobiLib.Unity.SQLite
 
         }
 
-        private ChobiSQLite _db;
-        public ChobiSQLite Db => _db ??= GenerateDb();
-
-        public virtual void DeleteDbFile()
+        public override void DeleteDbFile(string dbFilePath = null)
         {
-            _db?.Dispose();
-            _db = null;
-
-            var path = DbFilePath;
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
-
-        protected virtual ChobiSQLite GenerateDb() => new(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, showDebugLog);
-
-        public virtual async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func) => await Db.WithAsyncInBackground(func);
-        public async Task WithAsyncInBackground(UnityAction<SQLiteConnection> action)
-        {
-            await WithAsyncInBackground(c =>
-            {
-                action(c);
-                return false;
-            });
-        }
-
-        public virtual async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
-        {
-            return await Db.WithTransactionAsyncInBackground(func);
-        }
-
-        public async Task WithTransactionAsyncInBackground(UnityAction<SQLiteConnection> action)
-        {
-            await WithTransactionAsyncInBackground(d =>
-            {
-                action?.Invoke(d);
-                return false;
-            });
-        }
-
-        
-        protected virtual void CloseDb()
-        {
-            if (_db != null && !_db.IsDisposed)
-            {
-                _db.Dispose();
-            }
-        }
-
-
-        protected virtual int LockWaitTimeMsOnApplicationQuit => 1000;
-
-        protected virtual void OnApplicationPause(bool pause)
-        {
-            if (pause && _db != null && !_db.IsDisposed)
-            {
-                ChobiSQLite.Log($"Enter OnAppPause", showLog: showDebugLog);
-                _db.WithTransactionSync(db =>
-                {
-                    onAppPausedProcessInBackground?.Invoke(db);
-                }, LockWaitTimeMsOnApplicationQuit);
-                ChobiSQLite.Log($"Exit OnAppPause", showLog: showDebugLog);
-            }
-        }
-
-        protected virtual void OnApplicationQuit()
-        {
-            if (_db != null && !_db.IsDisposed)
-            {
-                ChobiSQLite.Log($"Enter OnAppQuit", showLog: showDebugLog);
-
-                _db.WithTransactionSync(db =>
-                {
-                    onAppQuitProcessInBackground?.Invoke(db);
-                }, LockWaitTimeMsOnApplicationQuit);
-
-                ChobiSQLite.Log($"Exit OnAppQuit", showLog: showDebugLog);
-
-                _db.Dispose();
-            }
+            base.DeleteDbFile(DbFilePath ?? dbFilePath);
         }
     }
 }

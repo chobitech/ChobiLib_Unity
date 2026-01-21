@@ -1,0 +1,7 @@
+[*.cs]
+# メソッド引数が複数ある場合に改行を促す設定
+csharp_preserve_static_lambda_syntax = true
+csharp_style_allow_embedded_statements_on_same_line_experimental = false
+
+# 引数の折り返し設定（IDEによってはこれに反応します）
+dotnet_style_operator_placement_before_sequence_operators = true

@@ -28,7 +28,7 @@ namespace ChobiLib.Unity
         public static string GetCrossPlatformSavedataPath(string dataDirName = "savedata")
         {
             var userDirPath = Application.persistentDataPath;
-            return Path.Combine(userDirPath, dataDirName);
+            return Path.Join(userDirPath, dataDirName);
         }
         
         public static IEnumerator ToRoutine(this UnityAction action)

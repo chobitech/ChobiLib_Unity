@@ -43,6 +43,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             return (cData != null) ? cData.ConvertTo<S>() : default;
         }
 
+        /*
         public async Task<Dictionary<string, bool>> SaveToDbAsync(params SecureDbContentData[] cData)
         {
             return await Db.WithTransactionAsyncInBackground(db =>
@@ -63,6 +64,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         {
             return await Db.WithTransactionAsyncInBackground(db => InstantiateFromDb<S>(db, contentId));
         }
+        */
 
     }
 }

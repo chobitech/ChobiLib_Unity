@@ -4,6 +4,8 @@ using UnityEngine;
 using ChobiLib.Unity.SQLite.SecureDb;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
+using ChobiLib.Unity.SQLite;
 
 [Serializable]
 public class STData
@@ -41,9 +43,9 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
     private string _hSeedFilePath;
     protected override string HSeedFilePath => _hSeedFilePath;
 
-    protected override async Task<string> LoadHKeyAsync()
+    protected override async Task<string> LoadHKeyAsync(CancellationToken token = default)
     {
-        return "";
+        return await ChobiSQLiteKey.LoadHKeyFromTextAsset("sk.asset");
     }
 
     protected override Type[] GetAdditionalTableSchemes() => new Type[]
@@ -56,17 +58,17 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
         _dbFilePath = Path.Join(Application.persistentDataPath, dbFileName);
         _hSeedFilePath = Path.Join(Application.persistentDataPath, "test_seed_file");
 
-        Debug.Log(_dbFilePath);
-
-        NoEncrypt = true;
+        NoEncrypt = false;
         DeleteDbFile();
+
+        Debug.Log($"delete old DB");
     }
 
     async Task Start()
     {
         await InitDb();
 
-        var vacuumed = await WithTransactionAsyncInBackground(db => db.VacuumUnusedSecureDbContentData<TestTable>());
+        var vacuumed = await WithTransactionAsyncInBackgroundThread(db => db.VacuumUnusedSecureDbContentData<TestTable>());
         Debug.Log($"v = {vacuumed}");
 
         /*
@@ -96,7 +98,7 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
         };
         Debug.Log(tt.ToJson());
 
-        var cid = await WithTransactionAsyncInBackground(db =>
+        var cid = await WithTransactionAsyncInBackgroundThread(db =>
         {
             var d = db.InsertAbsSecureDbContentData(tt);
             return d.ContentId;
@@ -104,7 +106,7 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 
         Debug.Log(cid);
 
-        var reData = await WithTransactionAsyncInBackground(db =>
+        var reData = await WithTransactionAsyncInBackgroundThread(db =>
         {
             return db.LoadAbsSecureDbContentData<TestTable>(cid);
         });

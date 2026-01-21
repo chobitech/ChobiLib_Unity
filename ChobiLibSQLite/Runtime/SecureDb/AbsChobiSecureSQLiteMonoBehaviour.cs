@@ -4,6 +4,8 @@ using UnityEngine;
 using System;
 using System.IO;
 using ChobiLib.Security;
+using System.Threading;
+using Unity.Android.Gradle;
 
 
 namespace ChobiLib.Unity.SQLite.SecureDb
@@ -50,16 +52,18 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         private bool IsInitDbNotExecute => !_keyInitializeFinished && !_isRunningInitDb;
 
-        public bool KeyAvailable => HKey != null && HSeed != null;
+        //public bool KeyAvailable => HKey != null && HSeed != null;
+
+        public bool KeyAvailable => KeyData != null;
 
         protected abstract string HSeedFilePath { get; }
 
-        protected virtual int HSeedByteSize { get; } = 48;
+        protected abstract Task<string> LoadHKeyAsync(CancellationToken token = default);
 
-        protected abstract Task<string> LoadHKeyAsync();
+        protected ChobiSQLiteKey KeyData { get; private set; }
 
-        protected string HKey { get; private set; }
-        protected string HSeed { get; private set; }
+        //protected string HKey { get; private set; }
+        //protected string HSeed { get; private set; }
 
         protected virtual Type[] GetAdditionalTableSchemes() => Array.Empty<Type>();
 
@@ -88,8 +92,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 throw ex;
             }
 
-            var h = new ChobiHash(Convert.FromBase64String(HKey)).CalcHash(Convert.FromBase64String(HSeed));
-            return Convert.ToBase64String(h);
+            var p = KeyData.GetKeyString();
+            Debug.Log($"p = {p}");
+
+            return p;
         }
 
         public override string DbPassword => GenDbPw();
@@ -97,29 +103,27 @@ namespace ChobiLib.Unity.SQLite.SecureDb
         private SecureDbContentDataDao _contentDataDao;
         public SecureDbContentDataDao ContentDataDao => _contentDataDao ??= new(this);
 
-        protected async Task LoadKeys()
+        protected async Task LoadKeys(CancellationToken token = default)
         {
             try
             {
-                HKey = await LoadHKeyAsync();
+                token.ThrowIfCancellationRequested();
 
-                var cToken = destroyCancellationToken;
+                var hk = await LoadHKeyAsync(token);
+                Debug.Log($"hk = {hk}");
+                
+                token.ThrowIfCancellationRequested();
 
                 var hsPath = HSeedFilePath;
 
-                await Task.Run(async () =>
-                {
-                    if (!File.Exists(hsPath))
-                    {
-                        var bArr = ChobiLib.GenerateRandomBytes(HSeedByteSize);
-                        HSeed = Convert.ToBase64String(bArr);
-                        await File.WriteAllTextAsync(hsPath, HSeed);
-                    }
-                    else
-                    {
-                        HSeed = await File.ReadAllTextAsync(hsPath);
-                    }
-                }, cToken);
+                token.ThrowIfCancellationRequested();
+
+                var hSeed = await ChobiSQLiteKey.LoadSKey(hsPath, token);
+                Debug.Log($"hSeed = {hSeed}");
+
+                token.ThrowIfCancellationRequested();
+
+                KeyData = new(hk, hSeed);
             }
             catch (Exception ex)
             {
@@ -173,7 +177,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        public override async Task<T> WithAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+        public override async Task<T> WithAsyncInBackgroundThread<T>(
+            Func<SQLiteConnection, T> func,
+            CancellationToken token = default
+        )
         {
             await ExecInitDb();
 
@@ -182,10 +189,14 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 return default;
             }
 
-            return await base.WithAsyncInBackground(func);
+            return await base.WithAsyncInBackgroundThread(func, token);
         }
 
-        public override async Task<T> WithTransactionAsyncInBackground<T>(Func<SQLiteConnection, T> func)
+
+        public override async Task<T> WithTransactionAsyncInBackgroundThread<T>(
+            Func<SQLiteConnection, T> func,
+            CancellationToken token = default
+        )
         {
             await ExecInitDb();
 
@@ -194,8 +205,7 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 return default;
             }
 
-            return await base.WithTransactionAsyncInBackground(func);
-        }
-        
+            return await base.WithTransactionAsyncInBackgroundThread(func, token);
+        }        
     }
 }

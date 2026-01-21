@@ -1,7 +1,21 @@
 {
-	"name": "ChobiLibSQLite",
-	"references": [
-		"ChobiLibUnity",
-		"SqlCipher4Unity3D"
-	]
+    "name": "ChobiLibSQLite",
+    "rootNamespace": "",
+    "references": [
+        "ChobiLibUnity",
+        "SqlCipher4Unity3D",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        ""
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

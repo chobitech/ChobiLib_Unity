@@ -1,6 +1,6 @@
 {
     "name": "com.chobitech.unity.sqlite",
-    "version": "0.2.43",
+    "version": "0.2.44",
     "displayName": "ChobiLibSQLite",
     "description": "unity library for personal use",
     "unity": "2022.3",
@@ -10,7 +10,8 @@
     },
     "dependencies": {
       "com.chobitech.unity": "https://github.com/chobitech/ChobiLib_Unity.git?path=/ChobiLib",
-      "com.netpyoung.sqlcipher4unity3d": "https://github.com/netpyoung/SqlCipher4Unity3D.git?path=SqlCipher4Unity3D/Assets/SqlCipher4Unity3D#1.3.5"
+      "com.netpyoung.sqlcipher4unity3d": "https://github.com/netpyoung/SqlCipher4Unity3D.git?path=SqlCipher4Unity3D/Assets/SqlCipher4Unity3D#1.3.5",
+      "com.unity.addressables": "2.7.4"
     }
   }
   
