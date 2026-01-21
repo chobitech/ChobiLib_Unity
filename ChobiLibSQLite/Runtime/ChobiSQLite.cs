@@ -110,7 +110,7 @@ namespace ChobiLib.Unity.SQLite
 
         public ChobiSQLite(
             string dbFilePath,
-            int dbVersion,
+            int dbVersion = 1,
             string password = null,
             bool enableForeignKey = true,
             ISQLiteInitializer initializer = null,
@@ -118,7 +118,7 @@ namespace ChobiLib.Unity.SQLite
         )
         {
             this.dbFilePath = dbFilePath;
-            this.dbVersion = dbVersion;
+            this.dbVersion = Math.Max(dbVersion, 1);
             this.showDebugLog = showDebugLog;
             this.enableForeignKey = enableForeignKey;
             this.initializer = initializer;
@@ -145,25 +145,27 @@ namespace ChobiLib.Unity.SQLite
 
             if (initializer != null)
             {
-                initializer.OnOpen(_con);
                 if (execOnCreate)
                 {
                     initializer.OnCreate(_con);
+                    Log($"\"{dbFilePath}\" Created", showLog: showDebugLog);
                 }
 
                 if (!isSameVersion)
                 {
                     initializer.OnUpgrade(_con, currentVer, dbVersion);
+                    Log($"DB version Upgraded: {currentVer} -> {dbVersion}", showLog: showDebugLog);
                 }
-            }
 
-            Log($"Create and open \"{dbFilePath}\"", showLog: showDebugLog);
+                initializer.OnOpen(_con);
+                Log($"DB opened", showLog: showDebugLog);
+            }
         }
 
         public ChobiSQLite(
             string dbFilePath,
-            int dbVersion,
             ChobiSQLiteKey sqLiteKey,
+            int dbVersion = 1,
             bool enableForeignKey = true,
             ISQLiteInitializer initializer = null,
             bool showDebugLog = true
