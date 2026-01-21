@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using System.Threading;
 using ChobiLib.Unity.SQLite;
+using SqlCipher4Unity3D;
 
 [Serializable]
 public class STData
@@ -38,10 +39,20 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
     private string _dbFilePath;
     public override string DbFilePath => _dbFilePath;
 
-    public override int DbVersion => 1;
+    public override int DbVersion => 2;
 
     private string _hSeedFilePath;
     protected override string HSeedFilePath => _hSeedFilePath;
+
+    public override void OnUpgrade(SQLiteConnection con, int oldVersion, int newVersion)
+    {
+        Debug.Log($"Upgrade! {oldVersion} -> {newVersion}");
+    }
+
+    public override void OnOpen(SQLiteConnection connection)
+    {
+        Debug.Log($"OPEN------");
+    }
 
     protected override async Task<string> LoadHKeyAsync(CancellationToken token = default)
     {
@@ -59,7 +70,7 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
         _hSeedFilePath = Path.Join(Application.persistentDataPath, "test_seed_file");
 
         NoEncrypt = false;
-        DeleteDbFile();
+        //DeleteDbFile();
     }
 
     async Task Start()

@@ -19,10 +19,11 @@ namespace ChobiLib.Unity.SQLite
             return new ChobiSQLite(DbFilePath, DbVersion, DbPassword, EnableForeignKey, this, ShowDebugLog);
         }
 
-        public virtual void OnCreate(SQLiteConnection con)
-        {
+        public virtual void OnCreate(SQLiteConnection con) {}
 
-        }
+        public virtual void OnUpgrade(SQLiteConnection con, int oldVersion, int newVersion) {}
+
+        public virtual void OnOpen(SQLiteConnection connection) {}
 
         public override void DeleteDbFile(string dbFilePath = null)
         {

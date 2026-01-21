@@ -148,10 +148,10 @@ namespace ChobiLib.Unity.SQLite
                 if (execOnCreate)
                 {
                     initializer.OnCreate(_con);
-                    Log($"\"{dbFilePath}\" Created", showLog: showDebugLog);
+                    Log($"Db file created: \"{dbFilePath}\"", showLog: showDebugLog);
                 }
 
-                if (!isSameVersion)
+                if (!execOnCreate && !isSameVersion)
                 {
                     initializer.OnUpgrade(_con, currentVer, dbVersion);
                     Log($"DB version Upgraded: {currentVer} -> {dbVersion}", showLog: showDebugLog);
