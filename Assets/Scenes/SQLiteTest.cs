@@ -60,8 +60,6 @@ public class SQLiteTest : AbsChobiSecureSQLiteMonoBehaviour
 
         NoEncrypt = false;
         DeleteDbFile();
-
-        Debug.Log($"delete old DB");
     }
 
     async Task Start()

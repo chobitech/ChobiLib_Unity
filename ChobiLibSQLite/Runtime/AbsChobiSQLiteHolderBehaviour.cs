@@ -95,6 +95,7 @@ namespace ChobiLib.Unity.SQLite
             if (dbPath != null && File.Exists(dbPath))
             {
                 File.Delete(dbPath);
+                ChobiSQLite.Log($"Db file deleted");
             }
 
             _runningInitDbCompletion = null;
@@ -165,6 +166,7 @@ namespace ChobiLib.Unity.SQLite
             {
                 Db.Dispose();
                 Db = null;
+                ChobiSQLite.Log($"Db Closed");
             }
         }
 

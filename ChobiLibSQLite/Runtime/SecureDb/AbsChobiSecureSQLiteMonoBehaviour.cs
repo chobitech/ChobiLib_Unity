@@ -9,52 +9,11 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 {
     public abstract class AbsChobiSecureSQLiteMonoBehaviour : AbsChobiSQLiteMonoBehaviour
     {
-        /*
-        private readonly TaskCompletionSource<bool> _initTcs = new();
-
-        public async Task<bool> WaitForSQLiteInitialized()
-        {
-            var res = await _initTcs.Task;
-            if (!res)
-            {
-                ChobiSQLite.LogWarning("SQlite Initialize failed");
-            }
-            return res;
-        }
-        */
-
         public bool NoEncrypt { get; protected set; } = false;
 
-        /*
-        public async Task<bool> WaitForSQLiteInitialized(int timeoutMs)
-        {
-            var checkTask = _initTcs.Task;
-            var toTask = Task.Delay(timeoutMs);
-            var complete = await Task.WhenAny(checkTask, toTask);
-            if (complete == checkTask)
-            {
-                var res = checkTask.Result;
-                if (!res)
-                {
-                    ChobiSQLite.LogWarning("SQlite Initialize failed");
-                }
-                return res;
-            }
-            else
-            {
-                ChobiSQLite.LogWarning("SQLite init wait timeout");
-                return false;
-            }
-        }
-        */
-
-        private bool _keyInitialized;
-
-        public override bool IsDbInitialized => base.IsDbInitialized && _keyInitialized;
-
-        //private bool IsInitDbNotExecute => !_keyInitializeFinished && !_isRunningInitDb;
-
         public bool KeyAvailable => KeyData != null;
+
+        public override bool IsDbInitialized => base.IsDbInitialized && KeyAvailable;
 
         protected abstract string HSeedFilePath { get; }
 
@@ -96,8 +55,8 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override string DbPassword => GenDbPw();
 
-        private SecureDbContentDataDao _contentDataDao;
-        public SecureDbContentDataDao ContentDataDao => _contentDataDao ??= new(this);
+        //private SecureDbContentDataDao _contentDataDao;
+        //public SecureDbContentDataDao ContentDataDao => _contentDataDao ??= new(this);
 
         protected async Task LoadKeys(CancellationToken token = default)
         {
@@ -122,10 +81,10 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             }
         }
 
-        protected override Task<ChobiSQLite> OpenChobiSQLite(CancellationToken token = default)
+        protected override async Task<ChobiSQLite> OpenChobiSQLite(CancellationToken token = default)
         {
-            
-            return base.OpenChobiSQLite(token);
+            await LoadKeys(token);
+            return await base.OpenChobiSQLite(token);
         }
 
         /*
