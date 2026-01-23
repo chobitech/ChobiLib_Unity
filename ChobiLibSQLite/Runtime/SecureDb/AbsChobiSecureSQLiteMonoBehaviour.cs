@@ -55,9 +55,6 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
         public override string DbPassword => GenDbPw();
 
-        //private SecureDbContentDataDao _contentDataDao;
-        //public SecureDbContentDataDao ContentDataDao => _contentDataDao ??= new(this);
-
         protected async Task LoadKeys(CancellationToken token = default)
         {
             try
@@ -86,89 +83,5 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             await LoadKeys(token);
             return await base.OpenChobiSQLite(token);
         }
-
-        /*
-        protected async Task InitDb(bool withOpenDb = true)
-        {
-            if (_keyInitializeFinished)
-            {
-                return;
-            }
-
-            _isRunningInitDb = true;
-
-            try
-            {
-                if (!NoEncrypt)
-                {
-                    await LoadKeys();
-                }
-                
-                if (withOpenDb)
-                {
-                    _ = Db;
-                }
-
-                _initTcs.TrySetResult(true);
-            }
-            catch (Exception ex)
-            {
-                _initTcs.TrySetResult(false);
-                ChobiSQLite.LogException(ex);
-                throw ex;
-            }
-            finally
-            {
-                _isRunningInitDb = false;
-                _keyInitializeFinished = true;
-            }
-        }
-        */
-
-        /*
-        private async Task ExecInitDb()
-        {
-            if (IsInitDbNotExecute)
-            {
-                ChobiSQLite.LogWarning("ChobiSecureSQLite not initialized, so run InitDb()");
-                await InitDb();
-            }
-        }
-        */
-
-        /*
-        public override async Task<T> WithAsyncInBackgroundThread<T>(
-            Func<SQLiteConnection, T> func,
-            CancellationToken token = default
-        )
-        {
-            //await ExecInitDb();
-
-            
-            if (!await WaitForSQLiteInitialized())
-            {
-                return default;
-            }
-            
-
-            return await base.WithAsyncInBackgroundThread(func, token);
-        }
-
-
-        public override async Task<T> WithTransactionAsyncInBackgroundThread<T>(
-            Func<SQLiteConnection, T> func,
-            CancellationToken token = default
-        )
-        {
-            await WaitForInitializeFinished();
-
-            if (!IsDbInitialized)
-            {
-                return default;
-            }
-
-            return await base.WithTransactionAsyncInBackgroundThread(func, token);
-        }
-        */
     }
 }

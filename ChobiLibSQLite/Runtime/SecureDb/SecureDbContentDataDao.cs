@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using SqlCipher4Unity3D;
 using UnityEngine;
 
@@ -42,29 +40,5 @@ namespace ChobiLib.Unity.SQLite.SecureDb
             var cData = con.Find<SecureDbContentData>(contentId);
             return (cData != null) ? cData.ConvertTo<S>() : default;
         }
-
-        /*
-        public async Task<Dictionary<string, bool>> SaveToDbAsync(params SecureDbContentData[] cData)
-        {
-            return await Db.WithTransactionAsyncInBackground(db =>
-            {
-                try
-                {
-                    return SaveToDb(db, cData);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                    throw ex;
-                }
-            });
-        }
-
-        public async Task<S> InstantiateFromDbAsync<S>(string contentId)
-        {
-            return await Db.WithTransactionAsyncInBackground(db => InstantiateFromDb<S>(db, contentId));
-        }
-        */
-
     }
 }

@@ -47,7 +47,7 @@ namespace ChobiLib.Unity.SQLite
             return IsDbInitialized;
         }
 
-        protected async Task InitDb(CancellationToken token = default)
+        protected async Task InitializeSQLiteAsync(CancellationToken token = default)
         {
             if (Db != null)
             {
@@ -110,7 +110,7 @@ namespace ChobiLib.Unity.SQLite
                 if (!IsDbInitialized)
                 {
                     ChobiSQLite.LogWarning("Running InitDB() because this is not initialized");
-                    await InitDb(token);
+                    await InitializeSQLiteAsync(token);
                 }
                 if (Db == null)
                 {
