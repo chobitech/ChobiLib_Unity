@@ -2,6 +2,10 @@ using System.Security.Cryptography;
 using SqlCipher4Unity3D;
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using Mono.Cecil.Cil;
+using MongoDB.Bson;
 
 namespace ChobiLib.Unity.SQLite.SecureDb
 {
@@ -43,6 +47,86 @@ namespace ChobiLib.Unity.SQLite.SecureDb
 
 
         //--- load
+        public static List<SecureDbContentData> SelectSecureDbContentData(this SQLiteConnection con, IEnumerable<string> contentIds, bool ignoreHashNotMatched = true)
+        {
+            var idArr = contentIds.ToArray();
+            var res = con.Table<SecureDbContentData>()
+                .Where(x => idArr.Contains(x.ContentId))
+                .ToList();
+            
+            if (ignoreHashNotMatched)
+            {
+                res = res.Where(x => x.CheckIsValidData()).ToList();
+            }
+
+            return res;
+        }
+
+        public static List<T> SelectSerializablesFromSecureDbContentData<T>(this SQLiteConnection con, IEnumerable<string> contentIds, bool ignoreHashNotMatched = true)
+        {
+            return con.SelectSecureDbContentData(contentIds)
+                .Select(x => JsonUtility.FromJson<T>(x.Content))
+                .ToList();
+        }
+
+        public static SecureDbContentData SelectSecureDbContentData(this SQLiteConnection con, string contentId)
+        {
+            return con.Find<SecureDbContentData>(contentId);
+        }
+
+        public static T SelectSerializableFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
+        {
+            var res = con.SelectSecureDbContentData(contentId);
+            return (res != null) ? JsonUtility.FromJson<T>(res.Content) : default;
+        }
+
+
+
+        public static List<AbsSecureDbContentDataHolder<T>> ToAbsSecureDbContentDataHolders<T>(this TableQuery<T> query) where T : AbsSecureDbContentData, new()
+        {
+            return query.Connection.Table<SecureDbContentData>()
+                .Join(
+                    query,
+                    scd => scd.ContentId,
+                    t => t.SecureDbContentDataId,
+                    (scd, t) => new { scd, t }
+                )
+                .ToArray()
+                .Select(v =>
+                {
+                    return new AbsSecureDbContentDataHolder<T>(v.t, v.scd.CheckIsValidDataWithContent(v.t.ToJson()));
+                })
+                .ToList();
+        }
+
+        public static List<AbsSecureDbContentDataHolder<T>> SelectAbsSecureDbContentData<T>(this SQLiteConnection c, IEnumerable<string> contentIds) where T : AbsSecureDbContentData, new()
+        {
+            var cidArr = contentIds.ToArray();
+            return c.Table<T>()
+                .Where(t => cidArr.Contains(t.SecureDbContentDataId))
+                .ToAbsSecureDbContentDataHolders();
+        }
+
+        public static AbsSecureDbContentDataHolder<T> SelectAbsSecureDbContentData<T>(this SQLiteConnection c, string contentId) where T : AbsSecureDbContentData, new()
+        {
+            return c.SelectAbsSecureDbContentData<T>(new string[] { contentId }).FirstOrDefault();
+        }
+
+        /*
+        public static SecureDbContentData LoadSecureDbContentData(this SQLiteConnection con, string contentId)
+        {
+            var scd = con.Find<SecureDbContentData>(contentId);
+            if (scd?.CheckIsValidData() == true)
+            {
+                return scd;
+            }
+            return null;
+        }
+
+
+
+        public 
+
         public static SecureDbContentData LoadSecureDbContentData<T>(this SQLiteConnection con, string contentId) where T : AbsSecureDbContentData, new()
         {
             var srcData = con.Table<T>()
@@ -94,6 +178,14 @@ namespace ChobiLib.Unity.SQLite.SecureDb
                 return false;
             }
         }
+
+
+
+        public static T LoadSerializableFromSecureDbContentData<T>(this SQLiteConnection con, string contentId)
+        {
+            
+        }
+        */
 
 
 
