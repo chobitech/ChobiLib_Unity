@@ -44,7 +44,7 @@ namespace ChobiLib.Unity.SQLite
         }
 
 
-        public static async Task<ChobiSQLite> CreateInstanceWithPassword(
+        public static async Task<ChobiSQLite> CreateInstanceWithPasswordAsync(
             string dbFilePath,
             int dbVersion,
             Func<Task<string>> pwLoader,
@@ -60,7 +60,7 @@ namespace ChobiLib.Unity.SQLite
             return new ChobiSQLite(dbFilePath, dbVersion, pw, enableForeignKey, initializer, showDebugLog);
         }
 
-        public static async Task<ChobiSQLite> CreateInstanceWithLoadingSQLiteKey(
+        public static async Task<ChobiSQLite> CreateInstanceWithLoadingSQLiteKeyAsync(
             string dbFilePath,
             int dbVersion,
             string hkAddr,
@@ -69,7 +69,7 @@ namespace ChobiLib.Unity.SQLite
             ISQLiteInitializer initializer = null,
             bool showDebugLog = true,
             CancellationToken token = default
-        ) => await CreateInstanceWithPassword(
+        ) => await CreateInstanceWithPasswordAsync(
             dbFilePath,
             dbVersion,
             async () => (await ChobiSQLiteKey.LoadKeyData(hkAddr, hsFilePath, token))?.GetKeyString(),
