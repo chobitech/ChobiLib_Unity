@@ -1,4 +1,3 @@
-
 using ChobiLib.Unity.SQLite.SecureDb;
 
 public readonly struct AbsSecureDbContentDataHolder<T> where T : AbsSecureDbContentData
