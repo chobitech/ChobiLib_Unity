@@ -45,13 +45,12 @@ namespace ChobiLib.Unity.SQLite
             }, token);
         }
 
-        public static async Task<ChobiSQLiteKey> LoadKeyData(string hkAddr, string hsFileName, CancellationToken token = default)
+        public static async Task<ChobiSQLiteKey> LoadKeyData(string hkAddr, string hsFilePath, CancellationToken token = default)
         {
             return await ChobiUnityThread.RunOnBackgroundThreadAsync(async () =>
             {
                 var hk = await LoadHKeyFromTextAsset(hkAddr, token);
-                var filePath = await PathHelper.GetPathOnPersistentDataPathInAsync(hsFileName);
-                var ss = await LoadSKey(filePath);
+                var ss = await LoadSKey(hsFilePath);
                 return new ChobiSQLiteKey(hk, ss);
             }, token);
         }
