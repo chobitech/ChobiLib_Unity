@@ -28,21 +28,11 @@ namespace ChobiLib.Unity
             }
         }
 
-        /*
-        public void SetColor(string nameId, Color color, bool updateMaterialProperty = false)
-            => WithApplyToMaterial(m => m.SetColor(nameId, color), updateMaterialProperty);
-        
-        public void SetVector(string nameId, Vector4 vec, bool updateMaterialProperty = false)
-            => WithApplyToMaterial(m => m.SetVector(nameId, vec), updateMaterialProperty);
-            */
-
-
         protected virtual void Awake()
         {
             PropertyBlock = new();
-
             SelfRenderer = GetComponent<Renderer>();
-            SelfRenderer.GetComponent<Renderer>();
+            SelfRenderer.SetPropertyBlock(PropertyBlock);
         }
 
     }
