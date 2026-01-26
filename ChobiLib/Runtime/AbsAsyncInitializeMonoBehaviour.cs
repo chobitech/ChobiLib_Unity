@@ -1,3 +1,29 @@
+
+
+
+using System.Threading.Tasks;
+using UnityEngine;
+
+namespace ChobiLib.Unity
+{
+    [RequireComponent(typeof(AsyncInitializer))]
+    public abstract class AbsAsyncInitializeMonoBehaviour : MonoBehaviour
+    {
+        public abstract Task AsyncInitializeProcess();
+
+        public AsyncInitializer AsyncInitializer { get; private set; }
+
+        public bool IsInitialized => AsyncInitializer.IsInitialized;
+
+        protected virtual void Awake()
+        {
+            AsyncInitializer = GetComponent<AsyncInitializer>();
+            AsyncInitializer.initializer = AsyncInitializeProcess;
+        }
+    }
+}
+
+
 /*
 using System.Collections;
 using System.Collections.Generic;
