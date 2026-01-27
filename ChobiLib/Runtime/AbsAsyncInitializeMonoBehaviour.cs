@@ -1,6 +1,7 @@
 
 
 
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -14,6 +15,16 @@ namespace ChobiLib.Unity
         public AsyncInitializer AsyncInitializer { get; private set; }
 
         public bool IsInitialized => AsyncInitializer.IsInitialized;
+
+        public async Task WaitForFinishInitializeAsync()
+        {
+            await AsyncInitializer.WaitForFinishInitializeAsync();
+        }
+
+        public IEnumerator WaitForFinishInitializeRoutine()
+        {
+            yield return AsyncInitializer.WaitForFinishInitializeRoutine();
+        }
 
         protected virtual void Awake()
         {
