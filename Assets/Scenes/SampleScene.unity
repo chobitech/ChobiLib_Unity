@@ -576,6 +576,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2226107979884208333, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.00090738304
+      objectReference: {fileID: 0}
+    - target: {fileID: 3780857938843721028, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3780857938843721028, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3780857938843721028, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4359295086012668949, guid: 3e76e1b14681add4db736c1d7f57b949,
         type: 3}
       propertyPath: m_Pivot.x
@@ -680,6 +700,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: ChobiDebugCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 8440332574537658933, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8440332574537658933, guid: 3e76e1b14681add4db736c1d7f57b949,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -807,6 +837,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1666945732}
+  - component: {fileID: 1666945733}
   m_Layer: 0
   m_Name: DebugCanvasTest
   m_TagString: Untagged
@@ -829,6 +860,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1666945733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1666945731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d6a7c8753afee4ea5bf59d378e653d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DebugCanvasTest
 --- !u!1 &1695182448
 GameObject:
   m_ObjectHideFlags: 0

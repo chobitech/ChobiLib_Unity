@@ -12,6 +12,12 @@ public class ChobiDebugCanvas : MonoBehaviour
     private Vector2 resolution = new(1920, 1080);
 
     [SerializeField]
+    private float fontSize = 20f;
+
+    [SerializeField]
+    private Color fontColor = Color.white;
+
+    [SerializeField]
     private TMP_Text debugText;
 
     private CanvasScaler canvasScaler;
@@ -45,6 +51,8 @@ public class ChobiDebugCanvas : MonoBehaviour
         Instance = this;
 
         debugText.font = TMP_Settings.defaultFontAsset;
+        debugText.fontSize = fontSize;
+        debugText.color = fontColor;
 
         canvasScaler = GetComponent<CanvasScaler>();
         canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
