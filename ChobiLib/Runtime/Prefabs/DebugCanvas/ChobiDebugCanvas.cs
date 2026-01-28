@@ -44,6 +44,8 @@ public class ChobiDebugCanvas : MonoBehaviour
     {
         Instance = this;
 
+        debugText.font = TMP_Settings.defaultFontAsset;
+
         canvasScaler = GetComponent<CanvasScaler>();
         canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         canvasScaler.referenceResolution = resolution;
